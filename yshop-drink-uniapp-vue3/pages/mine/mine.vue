@@ -1,83 +1,62 @@
 <template>
 	<layout>
-		<uv-navbar
-		  :fixed="false"
-		  :title="title"
-		  left-arrow
-		  @leftClick="$onClickLeft"
-		/>
-		<view class="container">
-			<view style="padding: 0 30rpx;">
-				<!-- user box begin -->
-				<view class="d-flex flex-column bg-white user-box">
-
-					<view class="d-flex align-items-center">
-						<view class="avatar rounded-circle">
-							<image :src="isLogin ? member.avatar ? member.avatar : '/static/images/mine/default.png' : '/static/images/mine/default.png'"></image>
-						</view>
-						<view class="d-flex flex-column flex-fill overflow-hidden" style="margin-top: 20rpx;">
-							<view v-if="isLogin"
-								class="font-size-lg font-weight-bold d-flex justify-content-start align-items-center"
-								@tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">
-								<view class="text-truncate">{{ member.nickname }}</view>
-								<view class="iconfont iconarrow-right line-height-100"></view>
-							</view>
-							<view v-else class="font-size-lg font-weight-bold" @tap="login">游客</view>
-						</view>
+		<view class="mine-container">
+			<!-- Top Background -->
+			<view class="bg-box">
+				<!-- We use a background image matching the theme, you can replace the src with your actual background asset -->
+				<image class="bg-img" src="https://images.unsplash.com/photo-1527281400683-1aae777175f8?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
+				
+				<view :style="{ height: statusBarHeight + 'px' }"></view>
+				<view class="nav-bar"></view>
+				
+				<!-- User Info Row -->
+				<view class="user-info-row d-flex align-items-center">
+					<view class="avatar rounded-circle">
+						<image :src="isLogin ? member.avatar ? member.avatar : '/static/images/mine/default.png' : '/static/images/mine/default.png'"></image>
 					</view>
-					<!-- user grid begin -->
-					<view class="w-100 d-flex align-items-center just-content-center">
-						<view class="user-grid" @tap="serv({type:'pages',pages:'/pages/components/pages/coupons/coupons'})">
-							<view class="value font-size-extra-lg font-weight-bold text-color-base">
-								{{ isLogin ? member.couponCount : 0}}
-							</view>
-							<view class="font-size-sm text-color-assist">优惠券</view>
-						</view>
-						<view class="user-grid"  @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=1'})">
-							<view class="value font-size-extra-lg font-weight-bold text-color-base">
-								{{ isLogin ? member.integral : 0 }}
-							</view>
-							<view class="font-size-sm text-color-assist">积分</view>
-						</view>
-						<view class="user-grid">
-							<view class="value font-size-extra-lg font-weight-bold text-color-base">
-								{{ isLogin ? member.nowMoney : 0 }}
-							</view>
-							<view class="font-size-sm text-color-assist">余额</view>
-						</view>
-						<view class="user-grid" @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=0'})">
-							<view class="value font-size-extra-lg font-weight-bold text-color-base">
-								{{ isLogin ? member.sumMoney : 0 }}
-							</view>
-							<view class="font-size-sm text-color-assist">历史消费</view>
-						</view>
+					<view class="user-name">
+						<view v-if="isLogin" class="name-text text-truncate" @tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">{{ member.nickname }}</view>
+						<view v-else class="name-text" @tap="login">Seer Bar用户</view>
 					</view>
-					<!-- user grid end -->
 				</view>
-				<!-- user box end -->
-
 			</view>
-			<!-- service box begin -->
-			<view class="service-box">
-				<view class="font-size-lg text-color-base font-weight-bold" style="margin-bottom: 20rpx;">我的服务</view>
-				<view class="u-m-t-20">
-					<uv-cell-group>
+
+			<view class="content-box">
+				<!-- Floating White Card -->
+				<view class="white-card">
+					<view class="card-header d-flex justify-content-between align-items-center">
+						<view class="welcome">
+							<view class="title">欢迎加入Seer Bar</view>
+							<view class="subtitle">登录后解锁更多专属特权</view>
+						</view>
+						<view class="login-btn" @tap="login" v-if="!isLogin">注册/登录</view>
+					</view>
+					
+					<view class="stats-row d-flex align-items-center">
+						<view class="stat-item flex-1" @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=0'})">
+							<view class="stat-label">余额</view>
+							<view class="stat-value">{{ isLogin ? member.nowMoney : '*' }}</view>
+						</view>
+						<view class="divider"></view>
+						<view class="stat-item flex-1" @tap="serv({type:'pages',pages:'/pages/components/pages/coupons/coupons'})">
+							<view class="stat-label">优惠券</view>
+							<view class="stat-value">{{ isLogin ? member.couponCount : '*' }}</view>
+						</view>
+						<view class="divider"></view>
+						<view class="stat-item flex-1" @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=1'})">
+							<view class="stat-label">积分</view>
+							<view class="stat-value">{{ isLogin ? member.integral : '*' }}</view>
+						</view>
+					</view>
+				</view>
+
+				<!-- Services List -->
+				<view class="service-list">
+					<uv-cell-group :border="false">
 						<block v-for="(item, index) in services" :key='index'>
-							<uv-cell :title="item.name" v-if="item.type == 'contact'" :isLink="true">
-								<template #icon>
-									<image :src="item.image" style="width: 40rpx;height: 40rpx;" class="mr-1"></image>
-								</template>
-							</uv-cell>
-							<uv-cell :isLink="true" :title="item.name" v-else-if="item.type == 'call'" v-on:click="makePhoneCall(item.phone)">
-								<template #icon>
-									<image :src="item.image" style="width: 40rpx;height: 40rpx;" class="mr-1"></image>
-								</template>
-							</uv-cell>
-							<uv-cell :isLink="true" :title="item.name" v-else @tap="serv(item)">
-								<template #icon>
-									<image :src="item.image" style="width: 40rpx;height: 40rpx;" class="mr-1"></image>
-								</template>
-							</uv-cell>
+							<uv-cell :title="item.name" v-if="item.type == 'contact'" :isLink="true" :border="index !== services.length - 1"></uv-cell>
+							<uv-cell :isLink="true" :title="item.name" v-else-if="item.type == 'call'" v-on:click="makePhoneCall(item.phone)" :border="index !== services.length - 1"></uv-cell>
+							<uv-cell :isLink="true" :title="item.name" v-else @tap="serv(item)" :border="index !== services.length - 1"></uv-cell>
 						</block>
 					</uv-cell-group>
 				</view>
@@ -99,11 +78,13 @@ import {
   userGetUserInfo,
   mineService
 } from '@/api/user'
+
 const main = useMainStore()
 const { member,isLogin } = storeToRefs(main)
 
 const title = ref('个人中心')
 const services = ref([])
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 
 const growthValue = computed(() => { 
 	if (!isLogin.value) return 0
@@ -120,7 +101,6 @@ onLoad(() => {
 onShow(() => {
 	getUserInfo();
 })
-
 
 const getUserInfo = async() => {
 	if (isLogin.value) {
@@ -184,119 +164,160 @@ const serv = (item) => {
 	}
 }
 
-
-
 </script>
 
 <style lang="scss" scoped>
 	page {
 		height: auto;
 		min-height: 100%;
+		background-color: #f8f8f8;
 	}
 
-
-	.user-box {
+	.mine-container {
 		position: relative;
-		border-radius: 8rpx;
-		margin-bottom: 30rpx;
-		margin-top: 70rpx;
-		box-shadow: $box-shadow;
-	}
-
-	.avatar {
-		position: relative;
-		margin-top: -35rpx;
-		margin-left: 35rpx;
-		margin-right: 35rpx;
-		width: 160rpx;
-		height: 160rpx;
-		border-radius: 20rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background-color: #FFFFFF;
-		box-shadow: 0 0 20rpx rgba($color: #000000, $alpha: 0.2);
-
-		image {
-			width: 140rpx;
-			height: 140rpx;
-			border-radius: 100%;
-		}
-
-		.badge {
-			position: absolute;
-			right: -10rpx;
-			bottom: -10rpx;
-			background-color: #FFFFFF;
-			border-radius: 50rem;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: $color-warning;
-			font-size: 24rpx;
-			padding: 8rpx 16rpx;
-			box-shadow: 0 0 20rpx rgba($color: #000000, $alpha: 0.2);
-
-			image {
-				width: 30rpx;
-				height: 30rpx;
-			}
-		}
-	}
-
-
-	.user-grid {
-		width: 25%;
-		padding: 30rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-
-		.value {
-			margin-bottom: 20rpx;
-		}
-	}
-
-	
-
-	.service-box {
 		width: 100%;
-		background-color: #FFFFFF;
-		padding: 32rpx 30rpx 10rpx;
-		box-shadow: $box-shadow;
+		min-height: 100vh;
+		background-color: #f8f8f8;
+	}
 
-		.row {
-			display: flex;
-			flex-wrap: wrap;
-			color: $text-color-assist;
-			font-size: $font-size-sm;
-			padding-bottom: -40rpx;
+	.bg-box {
+		position: relative;
+		width: 100%;
+		height: 460rpx;
+		
+		.bg-img {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+		}
 
-			.grid {
+		.nav-bar {
+			position: relative;
+			z-index: 1;
+			height: 44px;
+		}
+
+		.user-info-row {
+			position: relative;
+			z-index: 1;
+			padding: 0 40rpx;
+			margin-top: 20rpx;
+
+			.avatar {
+				width: 120rpx;
+				height: 120rpx;
+				background-color: #FFFFFF;
 				display: flex;
-				flex-direction: column;
-				justify-content: center;
 				align-items: center;
-				margin-bottom: 40rpx;
-				width: 25%;
-				position: relative;
+				justify-content: center;
+				border-radius: 50%;
+				box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.1);
 
 				image {
-					width: 80rpx;
-					height: 80rpx;
-					margin-bottom: 20rpx;
+					width: 110rpx;
+					height: 110rpx;
+					border-radius: 50%;
 				}
 			}
 
-			.opacity-0 {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				opacity: 0;
-				z-index: 10;
+			.user-name {
+				margin-left: 30rpx;
+				.name-text {
+					font-size: 36rpx;
+					font-weight: bold;
+					color: #ffffff;
+					text-shadow: 0 2rpx 10rpx rgba(0,0,0,0.5);
+				}
+			}
+		}
+	}
+
+	.content-box {
+		position: relative;
+		z-index: 2;
+		padding: 0 30rpx;
+		margin-top: -60rpx;
+	}
+
+	.white-card {
+		background-color: #ffffff;
+		border-radius: 20rpx;
+		padding: 40rpx 30rpx;
+		box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.05);
+		margin-bottom: 30rpx;
+
+		.card-header {
+			margin-bottom: 50rpx;
+			
+			.welcome {
+				.title {
+					font-size: 32rpx;
+					font-weight: bold;
+					color: #333333;
+					margin-bottom: 12rpx;
+				}
+				.subtitle {
+					font-size: 24rpx;
+					color: #999999;
+				}
 			}
 
+			.login-btn {
+				background-color: #000000;
+				color: #ffffff;
+				font-size: 24rpx;
+				padding: 14rpx 36rpx;
+				border-radius: 50rpx;
+				font-weight: 500;
+			}
+		}
+
+		.stats-row {
+			text-align: center;
+			justify-content: space-between;
+
+			.stat-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+
+				.stat-label {
+					font-size: 26rpx;
+					color: #666666;
+					margin-bottom: 20rpx;
+				}
+				.stat-value {
+					font-size: 32rpx;
+					font-weight: bold;
+					color: #333333;
+				}
+			}
+
+			.divider {
+				width: 1px;
+				height: 40rpx;
+				background-color: #f0f0f0;
+			}
+		}
+	}
+
+	.service-list {
+		background-color: #ffffff;
+		border-radius: 20rpx;
+		padding: 10rpx 20rpx;
+		margin-bottom: 40rpx;
+		box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.02);
+
+		::v-deep .uv-cell {
+			padding: 30rpx 10rpx !important;
+		}
+		
+		::v-deep .uv-cell__title-text {
+			font-size: 30rpx;
+			color: #333333;
 		}
 	}
 </style>
