@@ -16,6 +16,7 @@
     "pinia": "^2.1.6",
     "vant": "^4.6.2",
     "weixin-js-sdk": "^1.6.3",
-    "yarn": "^1.22.19"
+    "yarn": "^1.22.19",
+    "yshop-drink-vue3": "file:../yshop-drink-vue3"
   }
 }

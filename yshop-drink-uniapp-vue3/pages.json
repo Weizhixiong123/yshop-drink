@@ -1,6 +1,13 @@
 {
   "pages": [
     {
+      "path": "pages/splash/splash",
+      "style": {
+        "navigationStyle": "custom",
+        "disableScroll": true
+      }
+    },
+    {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页"
@@ -206,10 +213,10 @@
     "navigationStyle": "custom"
   },
   "tabBar": {
-  		"color": "#919293",
-  		"selectedColor": "#09b4f1",
+  		"color": "#b5b5b5",
+  		"selectedColor": "#111111",
   		"backgroundColor": "#fff",
-  		"borderStyle": "black",
+  		"borderStyle": "white",
   		"list": [{
   				"pagePath": "pages/index/index",
   				"text": "首页",
@@ -221,11 +228,6 @@
   				"text": "点餐",
   				"iconPath": "static/images/tabBar/drink.png",
   				"selectedIconPath": "static/images/tabBar/drink-selected.png"
-  			}, {
-  				"pagePath": "pages/cart/cart",
-  				"text": "购物车",
-  				"iconPath": "static/images/tabBar/cart.png",
-  				"selectedIconPath": "static/images/tabBar/cart-selected.png"
   			},{
   				"pagePath": "pages/order/order",
   				"text": "订单",

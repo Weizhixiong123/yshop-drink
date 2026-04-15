@@ -2,58 +2,60 @@
 	<layout>
 		<uv-navbar
 		  :fixed="false"
-		  :title="title"
+		  title="seer"
+		  bgColor="#111111"
 		  left-arrow
+		  leftIconColor="#f5f1e8"
+		  :titleStyle="{color:'#f5f1e8', fontSize:'32rpx', fontWeight:'700'}"
 		  @leftClick="$onClickLeft"
 		/>
 		
 		<view class="container" v-if="!loading">
-			<!-- <view>
-				<image :src="shopAd" mode="aspectFill" class="w-100 " style="height: 250rpx;"></image>
-			</view> -->
-			<view style="height: 60rpx;background-color: #FFFFFF;" v-if="store.notice">
-					<uv-notice-bar  :text="store.notice"></uv-notice-bar>
-			</view>
 		<view class="main">
 			<view class="nav">
 				<view class="header">
-					<view class="mr-1"><image :src="store.image" style="width:80rpx ; height: 80rpx; "></image></view>
-					<view class="left" v-if="orderType == 'takein'" style="">
-						<view class="store-name" @click="selectShop()">
-							<text>{{ store.name }}</text>
-							<view class="iconfont iconarrow-right"></view>
-						</view>
-						<view class="store-location">
-							<text>距离您 {{kmUnit(store.dis)}}</text>
-						</view>
-					</view>
-					<view class="left overflow-hidden" v-else>
-						<view class="store-name" @click="selectShop()">
-							<view>{{ store.name }}
-								<text class="small" v-if="store.distance > 0 && orderType == 'takeout'">(配送距离:
-									{{store.distance}}km)</text>
-								<text class="small" v-else-if="orderType == 'takeout'">(本店不支持外卖)</text>
+					<view class="header-main">
+						<view class="left" v-if="orderType == 'takein'">
+							<view class="store-name" @tap="selectShop()">
+								<text>{{ store.name || 'Seer Bar' }}</text>
 							</view>
-							<view class="iconfont iconarrow-right"></view>
+							<view class="store-location">
+								<text class="location-dot"></text>
+								<text>距离您{{kmUnit(store.dis)}}</text>
+							</view>
+						</view>
+						<view class="left overflow-hidden" v-else>
+							<view class="store-name" @tap="selectShop()">
+								<view>{{ store.name || 'Seer Bar' }}</view>
+							</view>
+							<view class="store-location">
+								<text class="location-dot"></text>
+								<text v-if="store.distance > 0">配送距离{{store.distance}}km</text>
+								<text v-else>本店暂不支持外卖</text>
+							</view>
+						</view>
+						<view class="right">
+							<view class="dinein" :class="{active: orderType == 'takein'}" @tap="takein">
+								<text>堂食</text>
+							</view>
+							<view class="takeout" :class="{active: orderType == 'takeout'}" @tap="takout">
+								<text>外卖</text>
+							</view>
 						</view>
 					</view>
-					<view class="right">
-						<view class="dinein" :class="{active: orderType == 'takein'}" @tap="takein">
-							<text>自取</text>
-						</view>
-						<view class="takeout" :class="{active: orderType == 'takeout'}" @tap="takout">
-							<text>外卖</text>
-						</view>
+					<view class="header-sub">
+						<view class="header-notice">{{ store.notice || '门店详情信息' }}</view>
+						<view class="header-more" @tap="selectShop()">更多</view>
 					</view>
 				</view>
 			</view>
 		
 			<!-- #ifdef H5 -->
 			<view class="content"
-				:style="{height: 'calc(100vh - 500rpx + '+(store.notice ? '0rpx':'60rpx')+')'}">
+				:style="{height: 'calc(100vh - 360rpx)'}">
 				<!-- #endif -->
 				<!-- #ifndef H5 -->
-				<view class="content" :style="{height: 'calc(100vh - 500rpx + '+(store.notice ? '0rpx':'60rpx')+')'}">
+				<view class="content" :style="{height: 'calc(100vh - 360rpx)'}">
 					<!-- #endif -->
 					<scroll-view class="menus" :scroll-into-view="menuScrollIntoView" scroll-with-animation scroll-y>
 						<view class="wrapper">
@@ -68,13 +70,20 @@
 					<scroll-view class="goods" scroll-with-animation scroll-y :scroll-top="cateScrollTop"
 						@scroll="handleGoodsScroll">
 						<view class="wrapper">
+							<view class="goods-toolbar">
+								<view class="search-shell">
+									<text class="search-shell-icon">⌕</text>
+									<text class="search-shell-text">搜索</text>
+								</view>
+								<view class="toolbar-cate">{{ currentCateName }}</view>
+							</view>
 							<view class="list">
 								<!-- category begin -->
 								<view class="category" v-for="(item, index) in goods" :key="index"
 									:id="`cate-${item.id}`">
 									<view class="title">
 										<text>{{ item.name }}</text>
-										<image mode="aspectFill" :src="item.icon" class="icon"></image>
+										<image v-if="item.icon" mode="aspectFill" :src="item.icon" class="icon"></image>
 									</view>
 									<view class="items">
 										<!-- 商品 begin -->
@@ -98,7 +107,7 @@
 													</view>
 											
 
-													<view v-if="good.stock == 0">已售罄</view>
+													<view v-if="good.stock == 0" class="soldout">已售罄</view>
 												</view>
 
 											</view>
@@ -115,21 +124,28 @@
 				</view>
 				<!-- content end -->
 				<!-- 购物车栏 begin -->
-				<view class="cart-box" v-if="cart.length > 0 && isCartShow">
+				<view class="cart-box" v-if="cart.length > 0">
 					<view class="mark">
 						<image src="/static/images/menu/cart.png" class="cart-img" @tap="openCartPopup"></image>
 						<view class="tag">{{ getCartGoodsNumber }}</view>
 					</view>
-					<view class="price" @tap="openCartShow">￥{{ getCartGoodsPrice }}</view>
+					<view class="price" @tap="openCartPopup">￥{{ getCartGoodsPrice }}</view>
 					<button type="primary" class="pay-btn" @tap="toPay" :disabled="disabledPay">
 						{{ disabledPay ? `差${spread}元起送` : '去结算' }}
 					</button>
 				</view>
+				<view class="cart-box cart-box--idle" v-else>
+					<view class="idle-copy">
+						<text class="idle-title">{{ bottomBarText }}</text>
+						<text class="idle-desc">{{ bottomBarHint }}</text>
+					</view>
+					<text class="idle-arrow">⌃</text>
+				</view>
 				<!-- 购物车栏 end -->
 			</view>
 			<!-- 商品详情模态框 begin -->
-			<modal :show="goodDetailModalVisible" class="good-detail-modal" color="#5A5B5C" width="90%" custom
-				padding="0rpx" radius="12rpx">
+			<modal :show="goodDetailModalVisible" class="good-detail-modal" color="#171717" width="92%" custom
+				padding="0rpx" radius="24rpx">
 				<view class="cover">
 					<view class="btn-group">
 						<image src="/static/images/menu/close.png" @tap="closeGoodDetailModal"></image>
@@ -143,7 +159,7 @@
 					<view class="wrapper">
 						<view class="basic">
 							<view class="name">{{ good.storeName }}</view>
-							<view class="tips flex justify-between">{{ good.storeInfo }} <text style="color: red;">可获积分:10</text></view>
+							<view class="tips flex justify-between">{{ good.storeInfo }} <text class="score-text">可获积分:10</text></view>
 						</view>
 						<view class="properties">
 							<view class="property" v-for="(item, index) in good.productAttr" :key="index">
@@ -169,7 +185,7 @@
 						</view>
 					</view>
 					<view class="btn-group">
-						<text style="margin-right: 20rpx;">库存：{{good.stock}} </text>
+						<text class="stock-text">库存：{{good.stock}}</text>
 						<button type="default" plain class="btn" size="mini" hover-class="none"
 							@tap="handlePropertyReduce">
 							<view class="iconfont iconsami-select"></view>
@@ -269,7 +285,6 @@ const cartPopupVisible = ref(false)
 const sizeCalcState = ref(false)
 const newValue = ref([])
 const shopAd = ref('')
-const isCartShow = ref(true)
 const popup = ref()
 
 
@@ -277,6 +292,10 @@ const popup = ref()
 const newkmUnit = computed(() => (param) =>{
   console.log('param:',param)
   return '10km'
+})
+const currentCateName = computed(() => {
+	const currentCate = goods.value.find(item => item.id === currentCateId.value)
+	return currentCate?.name || goods.value[0]?.name || '经典鸡尾酒'
 })
 const goodCartNum = computed(() => { //计算单个饮品添加到购物车的数量
 	return (id) => cart.value.reduce((acc, cur) => {
@@ -302,12 +321,25 @@ const getCartGoodsPrice = computed(() =>{ //计算购物车总价
 	return parseFloat(price).toFixed(2);
 })
 const disabledPay = computed(() => { //是否达到起送价
-	return orderType.value == 'takeout' && (getCartGoodsPrice < parseFloat(store.value.min_price)) ? true :
-		false
+	const currentPrice = parseFloat(getCartGoodsPrice.value || 0)
+	const minPrice = parseFloat(store.value.min_price || 0)
+	return orderType.value == 'takeout' && currentPrice < minPrice
 })
 const spread = computed(() => { //差多少元起送
 	if (orderType.value != 'takeout') return
-	return parseFloat((store.value.min_price - getCartGoodsPrice).toFixed(2))
+	const currentPrice = parseFloat(getCartGoodsPrice.value || 0)
+	const minPrice = parseFloat(store.value.min_price || 0)
+	return parseFloat(Math.max(minPrice - currentPrice, 0).toFixed(2))
+})
+const bottomBarText = computed(() => {
+	if (!store.value?.id) return '正在定位附近门店'
+	if (store.value.status != 1) return '门店休息中'
+	return orderType.value == 'takeout' ? '添加商品后可外卖结算' : '添加商品后可堂食下单'
+})
+const bottomBarHint = computed(() => {
+	if (store.value?.status != 1) return store.value?.notice || '营业时间以门店公告为准'
+	if (orderType.value == 'takeout' && store.value?.min_price) return `${store.value.min_price}元起送`
+	return currentCateName.value
 })
 
 // 监听自定义事件
@@ -334,9 +366,6 @@ onShow(() => {
 	shopAd.value = uni.getStorageSync('shopAd')
 })
 
-const openCartShow = () =>{
-	isCartShow.value = false
-}
 const in_array = (search, array) => {
 	for (var i in array) {
 		if (array[i] == search) {
@@ -353,8 +382,7 @@ const selectShop = () => {
 const uToast = ref()
 const  init = async() => { //页面初始化
 	loading.value = true;
-    
-	//return
+
 	let error = {},
 		result = location.value
 	console.log('result:',result)
@@ -431,6 +459,10 @@ const getShopList = async(res) => {
 			});
 			if (mygoods) {
 				goods.value = mygoods;
+				if (mygoods.length > 0) {
+					currentCateId.value = mygoods[0].id;
+					menuScrollIntoView.value = `menu-${mygoods[0].id}`;
+				}
 				refreshCart();
 			}
 			console.log('goods:',mygoods)
@@ -571,7 +603,6 @@ const handleReduceFromCart = (item, good) => {
 	uni.setStorageSync('cart', JSON.parse(JSON.stringify(cart.value)))
 }
 const showGoodDetailModal = (item, newGood) => {
-	isCartShow.value = true
 	good.value = JSON.parse(JSON.stringify({
 		...newGood,
 		number: 1
@@ -718,6 +749,8 @@ const toPay = () => {
 	.container {
 		overflow: hidden;
 		position: relative;
+		background: #0f0f0f;
+		color: #f5f1e8;
 	}
 	
 	.loading {
@@ -726,6 +759,7 @@ const toPay = () => {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		background: #0f0f0f;
 	
 		image {
 			width: 260rpx;
@@ -747,19 +781,46 @@ const toPay = () => {
 	
 	.nav {
 		width: 100%;
-		//height: 212rpx;
-		height: 140rpx;
+		height: 170rpx;
 		display: flex;
 		flex-direction: column;
 	
 		.header {
 			width: 100%;
 			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 20rpx;
-			background-color: #ffffff;
-			height: 140rpx;
+			flex-direction: column;
+			padding: 22rpx 24rpx 18rpx;
+			background-color: #111111;
+			height: 170rpx;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+			.header-main {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+			}
+
+			.header-sub {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-top: 18rpx;
+			}
+
+			.header-notice {
+				flex: 1;
+				color: #867d74;
+				font-size: 22rpx;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.header-more {
+				margin-left: 16rpx;
+				color: #c4baaf;
+				font-size: 22rpx;
+			}
 	
 			.left {
 				flex: 1;
@@ -770,15 +831,13 @@ const toPay = () => {
 					display: flex;
 					justify-content: flex-start;
 					align-items: center;
-					font-size: $font-size-lg;
-					margin-bottom: 10rpx;
+					font-size: 36rpx;
+					font-weight: 700;
+					color: #f7f0e6;
+					margin-bottom: 12rpx;
 					.small {
-						font-size: $font-size-sm;
-						color: $text-color-assist;
-					}
-					.iconfont {
-						margin-left: 10rpx;
-						line-height: 100%;
+						font-size: 22rpx;
+						color: #857d74;
 					}
 				}
 	
@@ -786,54 +845,48 @@ const toPay = () => {
 					display: flex;
 					justify-content: flex-start;
 					align-items: center;
-					color: $text-color-assist;
-					font-size: $font-size-sm;
+					color: #a69d93;
+					font-size: 22rpx;
+					gap: 8rpx;
 	
-					.iconfont {
-						vertical-align: middle;
-						display: table-cell;
-						color: $color-primary;
-						line-height: 100%;
+					.location-dot {
+						width: 12rpx;
+						height: 12rpx;
+						border-radius: 50%;
+						background: #d2a46b;
+						box-shadow: 0 0 0 4rpx rgba(210, 164, 107, 0.14);
 					}
 				}
 			}
 	
 			.right {
-				background-color: $bg-color-grey;
-				border-radius: 38rpx;
+				background-color: #1e1e1e;
+				border: 1px solid rgba(255, 255, 255, 0.08);
+				border-radius: 999rpx;
 				display: flex;
 				align-items: center;
-				font-size: $font-size-sm;
-				padding: 0 38rpx;
-				color: $text-color-assist;
+				font-size: 22rpx;
+				padding: 6rpx;
+				color: #a49b91;
 	
 				.dinein,
 				.takeout {
 					position: relative;
 					display: flex;
 					align-items: center;
+					justify-content: center;
+					min-width: 86rpx;
+					padding: 12rpx 18rpx;
 					&.active {
-						padding: 14rpx 38rpx;
-						color: #ffffff;
-						background-color: $color-primary;
-						//background-color: #5A5B5C;
-						border-radius: 38rpx;
+						color: #111111;
+						background-color: #f4efe7;
+						border-radius: 999rpx;
+						font-weight: 700;
 					}
 				}
 	
 				.takeout {
-					margin-left: 20rpx;
-					height: 100%;
-					flex: 1;
-					padding: 14rpx 0;
-				}
-	
-				.dinein.active {
-					margin-left: -38rpx;
-				}
-	
-				.takeout.active {
-					margin-right: -38rpx;
+					margin-left: 6rpx;
 				}
 			}
 		}
@@ -842,53 +895,57 @@ const toPay = () => {
 	
 	.content {
 		width: 100%;
-		height: calc(100vh - 212rpx);
+		height: calc(100vh - 320rpx);
 		/* #ifdef H5 */
-		height: calc(100vh - 212rpx - 188rpx);
+		height: calc(100vh - 320rpx - 110rpx);
 		/* #endif */
 		display: flex;
+		background: #0f0f0f;
 	
 		.menus {
-			width: 200rpx;
+			width: 154rpx;
 			height: 100%;
 			overflow: hidden;
-			background-color: $bg-color-grey;
+			background-color: #0b0b0b;
 	
 			.wrapper {
 				width: 100%;
 				height: 100%;
+				padding: 16rpx 12rpx 180rpx;
 	
 				.menu {
 					display: flex;
 					align-items: center;
 					justify-content: flex-start;
-					padding: 30rpx 20rpx;
-					font-size: 26rpx;
-					color: $text-color-assist;
+					padding: 22rpx 16rpx;
+					margin-bottom: 10rpx;
+					font-size: 24rpx;
+					line-height: 1.35;
+					color: #7f776f;
 					position: relative;
+					border-radius: 18rpx;
 	
 					&.current {
-						background-color: #ffffff;
-						color: $text-color-base;
+						background-color: #f5f1e8;
+						color: #151515;
+						font-weight: 700;
 					}
 	
 					.dot {
 						position: absolute;
-						width: 34rpx;
-						height: 34rpx;
-						line-height: 34rpx;
-						font-size: 22rpx;
-						background-color: $color-primary;
-						//background-color: #5A5B5C;
-						color: #ffffff;
-						top: 16rpx;
+						min-width: 30rpx;
+						height: 30rpx;
+						line-height: 30rpx;
+						font-size: 18rpx;
+						background: #d39d63;
+						color: #111111;
+						top: 10rpx;
 						right: 10rpx;
 						border-radius: 100%;
 						text-align: center;
+						padding: 0 6rpx;
+						font-weight: 700;
 					}
-				}
-				.menu:last-child {
-					margin-bottom: 200rpx;
 				}
 			}
 		}
@@ -897,153 +954,199 @@ const toPay = () => {
 			flex: 1;
 			height: 100%;
 			overflow: hidden;
-			background-color: #ffffff;
+			background-color: #111111;
 	
 			.wrapper {
 				width: 100%;
 				height: 100%;
-				padding: 20rpx;
+				padding: 18rpx 18rpx 180rpx;
+			}
+
+			.goods-toolbar {
+				display: flex;
+				align-items: center;
+				gap: 16rpx;
+				margin-bottom: 22rpx;
+			}
+
+			.search-shell {
+				flex: 1;
+				height: 58rpx;
+				display: flex;
+				align-items: center;
+				padding: 0 18rpx;
+				border-radius: 999rpx;
+				background: #161616;
+				color: #6f685f;
+				font-size: 22rpx;
+			}
+
+			.search-shell-icon {
+				margin-right: 10rpx;
+				font-size: 24rpx;
+			}
+
+			.toolbar-cate {
+				max-width: 180rpx;
+				padding: 12rpx 18rpx;
+				border-radius: 999rpx;
+				background: #171717;
+				color: #d9d1c7;
+				font-size: 22rpx;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				border: 1px solid rgba(255, 255, 255, 0.08);
+			}
 	
-				.ads {
-					height: calc(300 / 550 * 510rpx);
+			.list {
+				width: 100%;
+				font-size: $font-size-base;
 	
-					image {
-						width: 100%;
-						height: 100%;
-						border-radius: 8rpx;
-					}
-				}
-	
-				.list {
+				.category {
 					width: 100%;
-					font-size: $font-size-base;
 	
-					.category {
-						width: 100%;
+					.title {
+						padding: 10rpx 2rpx 18rpx;
+						display: flex;
+						align-items: center;
+						color: #cbb393;
+						font-size: 24rpx;
+						font-weight: 600;
 	
-						.title {
-							padding: 30rpx 0;
-							display: flex;
-							align-items: center;
-							color: $text-color-base;
-	
-							.icon {
-								width: 38rpx;
-								height: 38rpx;
-								margin-left: 10rpx;
-							}
+						.icon {
+							width: 28rpx;
+							height: 28rpx;
+							margin-left: 10rpx;
 						}
 					}
-					.category:last-child {
-						margin-bottom: 200rpx;
-					}
+				}
+				.category:last-child {
+					margin-bottom: 180rpx;
+				}
 	
-					.items {
+				.items {
+					display: flex;
+					flex-direction: column;
+	
+					.good {
 						display: flex;
-						flex-direction: column;
-						padding-bottom: -30rpx;
+						align-items: stretch;
+						padding: 18rpx;
+						margin-bottom: 18rpx;
+						border-radius: 22rpx;
+						background: #191919;
+						border: 1px solid rgba(255, 255, 255, 0.04);
+						box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.22);
+						.image {
+							width: 136rpx;
+							height: 136rpx;
+							margin-right: 20rpx;
+							border-radius: 14rpx;
+							background: #252525;
+							flex-shrink: 0;
+						}
 	
-						.good {
+						.right {
+							flex: 1;
+							min-height: 136rpx;
+							overflow: hidden;
 							display: flex;
-							align-items: center;
-							//margin-bottom: 30rpx;
-							padding: 15rpx 0;
-							.image {
-								width: 160rpx;
-								height: 160rpx;
-								margin-right: 20rpx;
-								border-radius: 8rpx;
+							flex-direction: column;
+							align-items: flex-start;
+							justify-content: space-between;
+							padding-right: 4rpx;
+	
+							.name {
+								font-size: 30rpx;
+								font-weight: 700;
+								color: #f5f0e7;
+								margin-bottom: 8rpx;
+								width: 100%;
+								overflow: hidden;
+								text-overflow: ellipsis;
+								white-space: nowrap;
 							}
 	
-							.right {
-								flex: 1;
-								height: 160rpx;
+							.tips {
+								width: 100%;
+								font-size: 22rpx;
+								line-height: 1.45;
+								color: #8f867d;
+								margin-bottom: 12rpx;
+								display: -webkit-box;
+								-webkit-line-clamp: 2;
+								-webkit-box-orient: vertical;
 								overflow: hidden;
+							}
+	
+							.price_and_action {
+								width: 100%;
 								display: flex;
-								flex-direction: column;
-								align-items: flex-start;
 								justify-content: space-between;
-								padding-right: 14rpx;
+								align-items: center;
 	
-								.name {
-									font-size: $font-size-base;
-									margin-bottom: 10rpx;
-									width: 100%;
-									overflow: hidden;
-									text-overflow: ellipsis;
-									white-space: nowrap;
+								.price {
+									font-size: 34rpx;
+									font-weight: 700;
+									color: #f5f0e7;
 								}
 	
-								.tips {
-									width: 100%;
-									height: 40rpx;
-									line-height: 40rpx;
-									overflow: hidden;
-									text-overflow: ellipsis;
-									white-space: nowrap;
-									font-size: $font-size-sm;
-									color: $text-color-assist;
-									margin-bottom: 10rpx;
-								}
-	
-								.price_and_action {
-									width: 100%;
+								.btn-group {
 									display: flex;
 									justify-content: space-between;
 									align-items: center;
+									position: relative;
 	
-									.price {
-										font-size: $font-size-base;
-										font-weight: 600;
-									}
+									.btn {
+										padding: 0 18rpx;
+										box-sizing: border-box;
+										font-size: 20rpx;
+										height: 48rpx;
+										line-height: 48rpx;
+										background: #272727;
+										color: #f3ede4;
+										border: 1px solid rgba(255, 255, 255, 0.08);
 	
-									.btn-group {
-										display: flex;
-										justify-content: space-between;
-										align-items: center;
-										position: relative;
-	
-										.btn {
-											padding: 0 20rpx;
-											box-sizing: border-box;
-											font-size: $font-size-sm;
-											height: 44rpx;
-											line-height: 44rpx;
-	
-											&.property_btn {
-												border-radius: 24rpx;
-											}
-	
-											&.add_btn,
-											&.reduce_btn {
-												padding: 0;
-												width: 44rpx;
-												border-radius: 44rpx;
-											}
+										&.property_btn {
+											border-radius: 999rpx;
 										}
 	
-										.dot {
-											position: absolute;
-											background-color: #ffffff;
-											border: 1px solid $color-primary;
-											color: $color-primary;
-											font-size: $font-size-sm;
-											width: 36rpx;
-											height: 36rpx;
-											line-height: 36rpx;
-											text-align: center;
-											border-radius: 100%;
-											right: -12rpx;
-											top: -10rpx;
-										}
-	
-										.number {
+										&.add_btn,
+										&.reduce_btn {
+											padding: 0;
 											width: 44rpx;
-											height: 44rpx;
-											line-height: 44rpx;
-											text-align: center;
+											border-radius: 44rpx;
 										}
 									}
+	
+									.dot {
+										position: absolute;
+										background-color: #d3a268;
+										color: #111111;
+										font-size: 18rpx;
+										min-width: 32rpx;
+										height: 32rpx;
+										line-height: 32rpx;
+										text-align: center;
+										border-radius: 100%;
+										right: -10rpx;
+										top: -10rpx;
+										padding: 0 6rpx;
+										font-weight: 700;
+									}
+	
+									.number {
+										width: 44rpx;
+										height: 44rpx;
+										line-height: 44rpx;
+										text-align: center;
+									}
+								}
+
+								.soldout {
+									font-size: 22rpx;
+									color: #8e8477;
 								}
 							}
 						}
@@ -1059,25 +1162,28 @@ const toPay = () => {
 		height: 100%;
 		display: flex;
 		flex-direction: column;
+		background: #171717;
+		color: #f5f1e8;
+		border-radius: 24rpx;
 	
 		.cover {
-			height: 20rpx;
+			height: 28rpx;
 			display: flex;
 			justify-content: center;
 			align-items: center;
 	
 			.btn-group {
 				position: absolute;
-				right: 10rpx;
-				top: 0rpx;
+				right: 16rpx;
+				top: 10rpx;
 				display: flex;
 				align-items: center;
 				justify-content: space-around;
 				z-index: 210;
 				 
 				image {
-					width: 80rpx;
-					height: 80rpx;
+					width: 72rpx;
+					height: 72rpx;
 				}
 			}
 		}
@@ -1089,12 +1195,15 @@ const toPay = () => {
 			position: relative;
 	
 			.image {
+				padding-top: 36rpx;
 				display: flex;
 				justify-content: center;
 				align-items: center;
 				image {
-					width: 260rpx;
-					height: 260rpx;
+					width: 320rpx;
+					height: 320rpx;
+					border-radius: 24rpx;
+					background: #202020;
 				}
 			}
 			.wrapper {
@@ -1103,24 +1212,32 @@ const toPay = () => {
 				overflow: hidden;
 	
 				.basic {
-					padding: 0 20rpx 30rpx;
+					padding: 24rpx 28rpx 30rpx;
 					display: flex;
 					flex-direction: column;
 					.name {
-						font-size: $font-size-base;
-						color: $text-color-base;
-						margin-bottom: 10rpx;
+						font-size: 34rpx;
+						color: #f5f1e8;
+						font-weight: 700;
+						margin-bottom: 12rpx;
 					}
 					.tips {
-						font-size: $font-size-sm;
-						color: $text-color-grey;
+						font-size: 24rpx;
+						line-height: 1.5;
+						color: #8f867d;
+
+						.score-text {
+							margin-left: 16rpx;
+							color: #d3a268;
+							flex-shrink: 0;
+						}
 					}
 				}
 	
 				.properties {
 					width: 100%;
-					border-top: 2rpx solid $bg-color-grey;
-					padding: 10rpx 30rpx 0;
+					border-top: 1px solid rgba(255, 255, 255, 0.08);
+					padding: 24rpx 28rpx 8rpx;
 					display: flex;
 					flex-direction: column;
 	
@@ -1129,25 +1246,25 @@ const toPay = () => {
 						display: flex;
 						flex-direction: column;
 						margin-bottom: 30rpx;
-						padding-bottom: -16rpx;
 	
 						.title {
 							width: 100%;
 							display: flex;
 							justify-content: flex-start;
 							align-items: center;
-							margin-bottom: 20rpx;
+							margin-bottom: 18rpx;
 	
 							.name {
 								font-size: 26rpx;
-								color: $text-color-base;
+								color: #f5f1e8;
 								margin-right: 20rpx;
+								font-weight: 600;
 							}
 	
 							.desc {
 								flex: 1;
-								font-size: $font-size-sm;
-								color: $color-primary;
+								font-size: 24rpx;
+								color: #d3a268;
 								overflow: hidden;
 								text-overflow: ellipsis;
 								white-space: nowrap;
@@ -1160,17 +1277,20 @@ const toPay = () => {
 							flex-wrap: wrap;
 	
 							.value {
-								border-radius: 8rpx;
-								background-color: $bg-color-grey;
-								padding: 16rpx 30rpx;
+								border-radius: 999rpx;
+								background-color: #232323;
+								padding: 14rpx 28rpx;
 								font-size: 26rpx;
-								color: $text-color-assist;
+								color: #c4bbaf;
 								margin-right: 16rpx;
 								margin-bottom: 16rpx;
+								border: 1px solid rgba(255, 255, 255, 0.08);
 	
 								&.default {
-									background-color: $color-primary;
-									color: $text-color-white;
+									background-color: #f5efe6;
+									color: #111111;
+									border-color: #f5efe6;
+									font-weight: 700;
 								}
 							}
 						}
@@ -1183,9 +1303,10 @@ const toPay = () => {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			background-color: $bg-color-grey;
-			height: 120rpx;
-			padding: 0 26rpx;
+			background-color: #111111;
+			height: 132rpx;
+			padding: 0 28rpx;
+			border-top: 1px solid rgba(255, 255, 255, 0.06);
 	
 			.left {
 				flex: 1;
@@ -1196,12 +1317,13 @@ const toPay = () => {
 				overflow: hidden;
 	
 				.price {
-					font-size: $font-size-lg;
-					color: $text-color-base;
+					font-size: 38rpx;
+					color: #f5f1e8;
+					font-weight: 700;
 				}
 	
 				.props {
-					color: $text-color-assist;
+					color: #8f867d;
 					font-size: 24rpx;
 					width: 100%;
 					overflow: hidden;
@@ -1213,22 +1335,36 @@ const toPay = () => {
 				display: flex;
 				align-items: center;
 				justify-content: space-around;
+
+				.stock-text {
+					margin-right: 18rpx;
+					color: #8f867d;
+					font-size: 22rpx;
+				}
 	
 				.number {
-					font-size: $font-size-base;
+					font-size: 28rpx;
 					width: 44rpx;
 					height: 44rpx;
 					line-height: 44rpx;
 					text-align: center;
+					color: #f5f1e8;
 				}
 	
 				.btn {
 					padding: 0;
-					font-size: $font-size-base;
+					font-size: 28rpx;
 					width: 44rpx;
 					height: 44rpx;
 					line-height: 44rpx;
 					border-radius: 100%;
+					background: #242424;
+					color: #f5f1e8;
+					border: 1px solid rgba(255, 255, 255, 0.08);
+
+					&::after {
+						border: none;
+					}
 				}
 			}
 		}
@@ -1237,11 +1373,12 @@ const toPay = () => {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			background-color: $color-primary;
-			color: $text-color-white;
-			font-size: $font-size-base;
-			height: 80rpx;
-			border-radius: 0 0 12rpx 12rpx;
+			background-color: #f5efe6;
+			color: #111111;
+			font-size: 30rpx;
+			font-weight: 700;
+			height: 92rpx;
+			border-radius: 0 0 24rpx 24rpx;
 		}
 	}
 	
@@ -1256,8 +1393,9 @@ const toPay = () => {
 		right: 30rpx;
 		height: 96rpx;
 		border-radius: 48rpx;
-		box-shadow: 0 0 20rpx rgba(0, 0, 0, 0.2);
-		background-color: #ffffff;
+		box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.38);
+		background-color: #141414;
+		border: 1px solid rgba(255, 255, 255, 0.08);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -1273,11 +1411,22 @@ const toPay = () => {
 		.pay-btn {
 			height: 100%;
 			padding: 0 30rpx;
-			color: #ffffff;
+			color: #111111;
 			border-radius: 0 50rpx 50rpx 0;
 			display: flex;
 			align-items: center;
 			font-size: $font-size-base;
+			background: #f5efe6;
+
+			&::after {
+				border: none;
+			}
+
+			&[disabled] {
+				background: #cabaa6 !important;
+				color: #111111 !important;
+				opacity: 0.75;
+			}
 		}
 	
 		.mark {
@@ -1286,9 +1435,8 @@ const toPay = () => {
 			position: relative;
 	
 			.tag {
-				//background-color: $color-warning;
-				background-color: #09b4f1;;
-				color: $text-color-white;
+				background-color: #d3a268;
+				color: #111111;
 				display: flex;
 				justify-content: center;
 				align-items: center;
@@ -1306,21 +1454,59 @@ const toPay = () => {
 	
 		.price {
 			flex: 1;
-			color: $text-color-base;
+			color: #f5efe6;
+			font-size: 30rpx;
+			font-weight: 700;
+		}
+	}
+
+	.cart-box--idle {
+		padding: 0 32rpx;
+		background: rgba(20, 20, 20, 0.96);
+
+		.idle-copy {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		.idle-title {
+			font-size: 28rpx;
+			font-weight: 700;
+			color: #f5efe6;
+			margin-bottom: 6rpx;
+		}
+
+		.idle-desc {
+			font-size: 22rpx;
+			color: #8f867d;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.idle-arrow {
+			color: #b9ae9f;
+			font-size: 30rpx;
+			padding-left: 24rpx;
 		}
 	}
 	
 	.cart-popup {
+		background: transparent;
+
 		.top {
-			background-color: $bg-color-primary;
-			//color: $color-primary;
-			color: #5A5B5C;
-			padding: 10rpx 30rpx;
+			background-color: #161616;
+			color: #b6ac9e;
+			padding: 22rpx 30rpx;
 			font-size: 24rpx;
 			text-align: right;
+			border-radius: 28rpx 28rpx 0 0;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 		}
 		.cart-list {
-			background-color: #ffffff;
+			background-color: #161616;
 			width: 100%;
 			overflow: hidden;
 			min-height: 1vh;
@@ -1346,9 +1532,8 @@ const toPay = () => {
 						bottom: 0;
 						left: 0;
 						width: 100%;
-						background-color: $border-color;
-						height: 2rpx;
-						transform: scaleY(0.6);
+						background-color: rgba(255, 255, 255, 0.06);
+						height: 1px;
 					}
 	
 					.left {
@@ -1359,11 +1544,12 @@ const toPay = () => {
 						margin-right: 30rpx;
 	
 						.name {
-							font-size: $font-size-sm;
-							color: $text-color-base;
+							font-size: 26rpx;
+							color: #f5efe6;
+							margin-bottom: 8rpx;
 						}
 						.props {
-							color: $text-color-assist;
+							color: #8f867d;
 							font-size: 24rpx;
 							overflow: hidden;
 							text-overflow: ellipsis;
@@ -1373,7 +1559,9 @@ const toPay = () => {
 	
 					.center {
 						margin-right: 120rpx;
-						font-size: $font-size-base;
+						font-size: 28rpx;
+						color: #f5efe6;
+						font-weight: 700;
 					}
 	
 					.right {
@@ -1388,14 +1576,22 @@ const toPay = () => {
 							padding: 0;
 							text-align: center;
 							line-height: 46rpx;
+							background: #242424;
+							color: #f5f1e8;
+							border: 1px solid rgba(255, 255, 255, 0.08);
+
+							&::after {
+								border: none;
+							}
 						}
 	
 						.number {
-							font-size: $font-size-base;
+							font-size: 28rpx;
 							width: 46rpx;
 							height: 46rpx;
 							text-align: center;
 							line-height: 46rpx;
+							color: #f5efe6;
 						}
 					}
 				}
@@ -1404,7 +1600,7 @@ const toPay = () => {
 	}
 	
 	.backgroud-grey {
-		background-color: #e1e4e4;
-		padding: 15rpx !important;
+		background: #121212 !important;
+		opacity: 0.58;
 	}
 </style>
