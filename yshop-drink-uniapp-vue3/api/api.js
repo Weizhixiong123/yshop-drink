@@ -36,7 +36,7 @@ fly.interceptors.response.use(
       handleLoginFailure()
       return Promise.reject({ msg: '未登录', toLogin: true })
     }
-    if (error.response.data.status == 5109) {
+    if (error.response && error.response.data && error.response.data.status == 5109) {
       uni.showToast({
         title: error.response.data.msg,
         icon: 'none',

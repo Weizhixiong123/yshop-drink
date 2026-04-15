@@ -213,9 +213,9 @@
     "navigationStyle": "custom"
   },
   "tabBar": {
-  		"color": "#b5b5b5",
-  		"selectedColor": "#111111",
-  		"backgroundColor": "#fff",
+  		"color": "#a2988c",
+  		"selectedColor": "#000000",
+  		"backgroundColor": "#ffffff",
   		"borderStyle": "white",
   		"list": [{
   				"pagePath": "pages/index/index",
@@ -225,7 +225,7 @@
   			},
   			{
   				"pagePath": "pages/menu/menu",
-  				"text": "点餐",
+  				"text": "点单",
   				"iconPath": "static/images/tabBar/drink.png",
   				"selectedIconPath": "static/images/tabBar/drink-selected.png"
   			},{

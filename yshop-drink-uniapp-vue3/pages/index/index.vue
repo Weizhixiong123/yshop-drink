@@ -3,6 +3,21 @@
     <view class="home-page">
       <view class="hero-section">
         <image class="hero-image" src="/static/home-hero.png" mode="aspectFill"></image>
+        <view class="hero-overlay">
+          <view class="hero-tag">
+            <text class="suit-icon">♠</text> TEXAS HOLD'EM & PUB
+          </view>
+          <view class="hero-title">ALL IN</view>
+          <view class="hero-subtitle">FOR THE NIGHT</view>
+          <view class="hero-elements">
+            <view class="poker-chip chip-red"></view>
+            <view class="poker-chip chip-black"></view>
+            <view class="poker-card">
+              <view class="card-suit">♠</view>
+              <view class="card-val">A</view>
+            </view>
+          </view>
+        </view>
       </view>
 
       <view class="content-panel">
@@ -15,48 +30,50 @@
             <view class="welcome-btn" @tap="openMemberCenter">{{ memberButtonText }}</view>
           </view>
 
-          <view class="feature-grid">
-            <view class="feature-item feature-border-right feature-border-bottom" @tap="takein">
-              <view class="feature-icon cocktail-icon">
-                <view class="cocktail-cup"></view>
-                <view class="cocktail-stem"></view>
-                <view class="cocktail-base"></view>
-                <view class="cocktail-olive"></view>
-              </view>
-              <view class="feature-title">堂食点单</view>
-              <view class="feature-subtitle">ORDER</view>
-            </view>
-
-            <view class="feature-item feature-border-bottom" @tap="openStorage">
-              <view class="feature-icon storage-icon">
-                <view class="storage-glass storage-glass-left"></view>
-                <view class="storage-bottle">
-                  <view class="storage-cap"></view>
-                  <view class="storage-label"></view>
+          <view class="feature-grid-modern">
+            <view class="feature-left" @tap="takein">
+              <view class="feature-icon feature-icon-large cocktail-icon">
+                <view class="martini-glass">
+                  <view class="martini-top"></view>
+                  <view class="martini-liquid"></view>
+                  <view class="martini-straw"></view>
                 </view>
-                <view class="storage-glass storage-glass-right"></view>
+                <view class="martini-stem"></view>
+                <view class="martini-base"></view>
               </view>
-              <view class="feature-title">存酒</view>
-              <view class="feature-subtitle">STORING</view>
+              <view class="feature-text-center">
+                <view class="feature-title">堂食点单</view>
+                <view class="feature-subtitle">ORDER</view>
+              </view>
             </view>
 
-            <view class="feature-item feature-border-right" @tap="goCoupons">
-              <view class="feature-icon coupon-icon">
-                <view class="coupon-body"></view>
-                <view class="coupon-cut coupon-cut-left"></view>
-                <view class="coupon-cut coupon-cut-right"></view>
-                <view class="coupon-mark"></view>
-              </view>
-              <view class="feature-title">卡券中心</view>
-              <view class="feature-subtitle">COUPONS</view>
-            </view>
+            <view class="feature-divider"></view>
 
-            <view class="feature-item" @tap="openRecharge">
-              <view class="feature-icon vip-icon">
-                <view class="vip-card">VIP</view>
+            <view class="feature-right">
+              <view class="feature-sub-item feature-sub-item-top" @tap="openStorage">
+                <view class="feature-icon feature-icon-small storage-icon">
+                  <view class="storage-glass storage-glass-left"></view>
+                  <view class="storage-bucket">
+                    <view class="storage-bottle-skew"></view>
+                    <view class="storage-bucket-line"></view>
+                  </view>
+                  <view class="storage-glass storage-glass-right"></view>
+                </view>
+                <view class="feature-text-left">
+                  <view class="feature-title">存酒</view>
+                  <view class="feature-subtitle">STORING</view>
+                </view>
               </view>
-              <view class="feature-title">会员充值</view>
-              <view class="feature-subtitle">RECHARGE</view>
+
+              <view class="feature-sub-item" @tap="openRecharge">
+                <view class="feature-icon feature-icon-small vip-icon">
+                  <view class="vip-card">VIP</view>
+                </view>
+                <view class="feature-text-left">
+                  <view class="feature-title">会员充值</view>
+                  <view class="feature-subtitle">RECHARGE</view>
+                </view>
+              </view>
             </view>
           </view>
         </view>
@@ -309,6 +326,28 @@ onLoad(() => {
   background: #f5f2eb;
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatElement {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4rpx); }
+  100% { transform: translateY(0); }
+}
+
+.content-panel > view {
+  animation: fadeInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.content-panel > view:nth-child(1) { animation-delay: 0.1s; }
+.content-panel > view:nth-child(2) { animation-delay: 0.15s; }
+.content-panel > view:nth-child(3) { animation-delay: 0.2s; }
+.content-panel > view:nth-child(4) { animation-delay: 0.25s; }
+.content-panel > view:nth-child(5) { animation-delay: 0.3s; }
+
 .hero-section {
   position: relative;
   height: 874rpx;
@@ -325,6 +364,110 @@ onLoad(() => {
   display: block;
 }
 
+.hero-overlay {
+  position: absolute;
+  top: 140rpx;
+  left: 46rpx;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 1s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.hero-tag {
+  color: #d4a45b;
+  font-size: 26rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  margin-bottom: 12rpx;
+  text-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+}
+.hero-tag .suit-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.hero-title {
+  color: #ffffff;
+  font-size: 88rpx;
+  font-weight: 900;
+  font-style: italic;
+  font-family: Impact, Arial, sans-serif;
+  letter-spacing: 4rpx;
+  line-height: 1.1;
+  text-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.9);
+}
+
+.hero-subtitle {
+  color: #ffffff;
+  font-size: 56rpx;
+  font-weight: 900;
+  font-style: italic;
+  font-family: Impact, Arial, sans-serif;
+  letter-spacing: 2rpx;
+  line-height: 1.1;
+  text-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.9);
+  margin-bottom: 30rpx;
+}
+
+.hero-elements {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+  position: relative;
+}
+
+.poker-chip {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  border: 4rpx dashed #ffffff;
+  box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.6);
+  position: absolute;
+}
+.chip-red {
+  background: #c1272d;
+  left: 0;
+  z-index: 2;
+  transform: rotate(15deg);
+}
+.chip-black {
+  background: #1a1a1a;
+  left: 30rpx;
+  z-index: 1;
+  transform: rotate(-10deg);
+}
+
+.poker-card {
+  width: 56rpx;
+  height: 80rpx;
+  background: #ffffff;
+  border-radius: 8rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.5);
+  margin-left: 100rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(12deg);
+  border: 2rpx solid #e0e0e0;
+}
+.poker-card .card-suit {
+  color: #1a1a1a;
+  font-size: 32rpx;
+  line-height: 1;
+  margin-bottom: 2rpx;
+}
+.poker-card .card-val {
+  color: #1a1a1a;
+  font-size: 24rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .content-panel {
   position: relative;
   z-index: 2;
@@ -337,6 +480,10 @@ onLoad(() => {
   border-radius: 28rpx;
   background: #ffffff;
   box-shadow: 0 14rpx 36rpx rgba(32, 20, 12, 0.08);
+  transition: transform 0.3s ease;
+}
+.service-card:active {
+  transform: scale(0.98);
 }
 
 .welcome-card {
@@ -373,43 +520,86 @@ onLoad(() => {
   color: #ffffff;
   font-size: 24rpx;
   font-weight: 600;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.welcome-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
-.feature-grid {
+.feature-grid-modern {
   display: flex;
-  flex-wrap: wrap;
-  padding-bottom: 6rpx;
+  align-items: stretch;
+  padding: 10rpx 0 24rpx;
 }
 
-.feature-item {
-  box-sizing: border-box;
-  width: 50%;
-  padding: 32rpx 18rpx 34rpx;
+.feature-left {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 30rpx 10rpx;
+  transition: background-color 0.2s;
+}
+.feature-left:active {
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
-.feature-border-right {
+.feature-divider {
+  width: 1px;
+  margin: 30rpx 0;
   border-right: 1px dashed #d5c8bb;
 }
 
-.feature-border-bottom {
-  border-bottom: 1px solid #f0e6da;
+.feature-right {
+  flex: 1.1;
+  display: flex;
+  flex-direction: column;
 }
 
-.feature-icon {
+.feature-sub-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 10rpx;
+  transition: background-color 0.2s;
+}
+.feature-sub-item:active {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.feature-sub-item-top {
   position: relative;
-  width: 108rpx;
-  height: 108rpx;
+}
+.feature-sub-item-top::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20rpx;
+  right: 20rpx;
+  height: 1px;
+  border-bottom: 1px dashed #f0e6da;
+}
+
+.feature-icon-large {
+  width: 160rpx;
+  height: 140rpx;
+  position: relative;
+}
+
+.feature-icon-small {
+  width: 100rpx;
+  height: 80rpx;
+  position: relative;
+  margin-right: 20rpx;
 }
 
 .feature-title {
-  margin-top: 10rpx;
   color: #17120f;
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .feature-subtitle {
@@ -419,171 +609,193 @@ onLoad(() => {
   letter-spacing: 2rpx;
 }
 
-.cocktail-cup {
-  position: absolute;
-  top: 20rpx;
-  left: 24rpx;
-  width: 58rpx;
-  height: 34rpx;
-  border-bottom: 6rpx solid #101010;
-  border-left: 6rpx solid #101010;
-  border-right: 6rpx solid #101010;
-  transform: skew(-18deg);
+.feature-text-center {
+  text-align: center;
+  margin-top: 10rpx;
 }
 
-.cocktail-cup::after {
+.feature-text-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 120rpx;
+}
+
+/* MARTINI GLASS ICON (Left side) */
+.martini-glass {
+  position: absolute;
+  top: 10rpx;
+  left: 25rpx;
+  width: 110rpx;
+  height: 60rpx;
+}
+.martini-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 55rpx solid transparent;
+  border-right: 55rpx solid transparent;
+  border-top: 60rpx solid #101010;
+}
+.martini-top::after {
   content: '';
   position: absolute;
-  top: -6rpx;
-  left: -10rpx;
-  width: 78rpx;
-  height: 6rpx;
-  background: #101010;
-  transform: skew(18deg);
+  top: -64rpx;
+  left: -47rpx;
+  width: 0;
+  height: 0;
+  border-left: 47rpx solid transparent;
+  border-right: 47rpx solid transparent;
+  border-top: 52rpx solid #ffffff;
 }
-
-.cocktail-stem {
-  position: absolute;
-  top: 62rpx;
-  left: 56rpx;
-  width: 6rpx;
-  height: 28rpx;
-  background: #101010;
-}
-
-.cocktail-base {
-  position: absolute;
-  top: 92rpx;
-  left: 34rpx;
-  width: 50rpx;
-  height: 6rpx;
-  background: #101010;
-}
-
-.cocktail-olive {
-  position: absolute;
-  top: 18rpx;
-  right: 18rpx;
-  width: 16rpx;
-  height: 16rpx;
-  border: 4rpx solid #101010;
-  border-radius: 50%;
-}
-
-.storage-icon {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 8rpx;
-}
-
-.storage-bottle {
-  position: relative;
-  width: 40rpx;
-  height: 74rpx;
-  border: 6rpx solid #101010;
-  border-radius: 10rpx 10rpx 12rpx 12rpx;
-}
-
-.storage-cap {
-  position: absolute;
-  top: -18rpx;
-  left: 8rpx;
-  width: 18rpx;
-  height: 18rpx;
-  border: 6rpx solid #101010;
-  border-bottom: 0;
-  border-radius: 8rpx 8rpx 0 0;
-}
-
-.storage-label {
+.martini-liquid {
   position: absolute;
   top: 24rpx;
-  left: 8rpx;
-  width: 16rpx;
-  height: 20rpx;
-  border: 4rpx solid #101010;
+  left: 22rpx;
+  width: 0;
+  height: 0;
+  border-left: 33rpx solid transparent;
+  border-right: 33rpx solid transparent;
+  border-top: 36rpx solid #101010;
+}
+.martini-straw {
+  position: absolute;
+  top: -28rpx;
+  left: 64rpx;
+  width: 6rpx;
+  height: 60rpx;
+  background: #101010;
+  transform: rotate(25deg);
+  border-radius: 4rpx;
+}
+.martini-stem {
+  position: absolute;
+  top: 70rpx;
+  left: 77rpx;
+  width: 6rpx;
+  height: 48rpx;
+  background: #101010;
+}
+.martini-base {
+  position: absolute;
+  top: 118rpx;
+  left: 47rpx;
+  width: 66rpx;
+  height: 6rpx;
+  background: #101010;
+  border-radius: 4rpx;
 }
 
-.storage-glass {
-  position: relative;
-  width: 24rpx;
-  height: 34rpx;
-  border: 5rpx solid #101010;
+/* STORAGE BUCKET ICON (Top Right) */
+.storage-icon {
+  margin-top: 16rpx;
+}
+.storage-bucket {
+  position: absolute;
+  top: 12rpx;
+  left: 24rpx;
+  width: 44rpx;
+  height: 36rpx;
+  border: 6rpx solid #101010;
   border-top: 0;
   border-radius: 0 0 10rpx 10rpx;
+  background: #ffffff;
+  z-index: 2;
 }
-
+.storage-bucket-line {
+  position: absolute;
+  top: -6rpx;
+  left: -8rpx;
+  width: 60rpx;
+  height: 6rpx;
+  background: #101010;
+  border-radius: 4rpx;
+}
+.storage-bottle-skew {
+  position: absolute;
+  top: -30rpx;
+  left: 12rpx;
+  width: 14rpx;
+  height: 32rpx;
+  background: #101010;
+  transform: rotate(15deg);
+  border-radius: 4rpx 4rpx 0 0;
+}
+.storage-bottle-skew::after {
+  content: '';
+  position: absolute;
+  top: -12rpx;
+  left: 2rpx;
+  width: 10rpx;
+  height: 12rpx;
+  background: #101010;
+  border-radius: 4rpx 4rpx 0 0;
+}
+.storage-glass {
+  position: absolute;
+  top: 14rpx;
+  width: 18rpx;
+  height: 24rpx;
+  border: 5rpx solid #101010;
+  border-top: 0;
+  border-radius: 0 0 8rpx 8rpx;
+  z-index: 1;
+}
 .storage-glass::after {
   content: '';
   position: absolute;
-  right: 5rpx;
-  bottom: -20rpx;
-  left: 5rpx;
-  height: 5rpx;
+  top: 28rpx;
+  left: 1.5rpx;
+  width: 5rpx;
+  height: 14rpx;
   background: #101010;
 }
-
-.storage-glass-left {
-  margin-right: 4rpx;
-}
-
-.storage-glass-right {
-  margin-left: 4rpx;
-}
-
-.coupon-body {
-  position: absolute;
-  top: 28rpx;
-  left: 14rpx;
-  width: 92rpx;
-  height: 54rpx;
-  border: 6rpx solid #101010;
-  border-radius: 14rpx;
-}
-
-.coupon-cut {
-  position: absolute;
-  top: 46rpx;
-  width: 18rpx;
-  height: 18rpx;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 6rpx solid #101010;
-}
-
-.coupon-cut-left {
-  left: 4rpx;
-}
-
-.coupon-cut-right {
-  right: 4rpx;
-}
-
-.coupon-mark {
+.storage-glass::before {
+  content: '';
   position: absolute;
   top: 42rpx;
-  left: 36rpx;
-  width: 48rpx;
-  height: 6rpx;
+  left: -4.5rpx;
+  width: 18rpx;
+  height: 5rpx;
   background: #101010;
-  box-shadow: 0 16rpx 0 #101010;
+  border-radius: 2rpx;
+}
+.storage-glass-left {
+  left: 2rpx;
+}
+.storage-glass-right {
+  left: 68rpx;
 }
 
+/* VIP CARD ICON (Bottom Right) */
+.vip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .vip-card {
-  position: absolute;
-  top: 32rpx;
-  left: 14rpx;
-  width: 92rpx;
-  height: 56rpx;
+  width: 80rpx;
+  height: 52rpx;
   border-radius: 12rpx;
   background: #101010;
   color: #ffffff;
-  font-size: 26rpx;
-  font-weight: 700;
-  line-height: 56rpx;
-  text-align: center;
-  letter-spacing: 2rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.vip-card::after {
+  content: '';
+  position: absolute;
+  bottom: 8rpx;
+  right: 8rpx;
+  width: 16rpx;
+  height: 6rpx;
+  background: #ffffff;
+  border-radius: 2rpx;
 }
 
 .home-notice,
@@ -594,6 +806,13 @@ onLoad(() => {
   border-radius: 24rpx;
   background: #ffffff;
   box-shadow: 0 10rpx 24rpx rgba(40, 28, 17, 0.06);
+  transition: transform 0.3s ease;
+}
+.home-notice:active,
+.booking-card:active,
+.benefit-card:active,
+.location-card:active {
+  transform: scale(0.98);
 }
 
 .home-notice {

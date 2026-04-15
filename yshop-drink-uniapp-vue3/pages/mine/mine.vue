@@ -110,10 +110,42 @@ const getUserInfo = async() => {
 		}
 	}
 }
+const defaultServices = [
+	{ name: '订单中心', type: 'pages', pages: '/pages/components/pages/orders/orders' },
+	{ name: '个人信息', type: 'pages', pages: '/pages/components/pages/mine/userinfo' },
+	{ name: '客服中心', type: 'contact' },
+	{ name: '我的地址', type: 'pages', pages: '/pages/components/pages/address/address' },
+	{ name: '会员储值', type: 'pages', pages: '/pages/components/pages/balance/bill?cate=0' },
+	{ name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' },
+	{ name: '我的优惠券', type: 'pages', pages: '/pages/components/pages/coupons/coupons' },
+]
+
 const getServices = async() => {
-	let data = await mineService();
-	if (data) {
+	let data = null;
+	try {
+		data = await mineService();
+	} catch(e) {
+		console.log('mineService error:', e);
+	}
+	
+	if (data && data.length > 0) {
+		const hasUserInfo = data.some(item => item.name === '个人信息');
+		const hasScore = data.some(item => item.name === '积分商城');
+
+		if (!hasUserInfo) {
+			data.splice(1, 0, { name: '个人信息', type: 'pages', pages: '/pages/components/pages/mine/userinfo' });
+		}
+		if (!hasScore) {
+			let couponIdx = data.findIndex(item => item.name === '我的优惠券' || item.name === '卡券中心');
+			if (couponIdx !== -1) {
+				data.splice(couponIdx, 0, { name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' });
+			} else {
+				data.push({ name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' });
+			}
+		}
 		services.value = data;
+	} else {
+		services.value = defaultServices;
 	}
 }
 const makePhoneCall = (phoneNumber) => {

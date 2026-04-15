@@ -12,27 +12,24 @@
 			mode="aspectFill"
 			@error="handleBgImageError"
 		></image>
-		<view v-if="!showBgImage" class="screen-mask"></view>
+		<view class="screen-mask"></view>
 		
-		<view v-if="!showBgImage" class="logo-container">
+		<view class="logo-container">
 			<image
-				v-if="showLogoImage"
 				class="logo"
 				src="/static/images/logo_white.png"
 				mode="aspectFit"
-				@error="handleLogoImageError"
 			></image>
-			<text v-else class="logo-text">Seer</text>
 		</view>
 
 		<view class="skip-btn" @tap="skip">
 			跳过 {{ countdown }}
 		</view>
 
-		<view v-if="!showBgImage" class="footer-text">
-			<view class="text-cn">微醺时刻，看见灵魂底色</view>
-			<view class="text-en">In a moment of slight drunkenness, seeing</view>
-			<view class="text-en">the soul's underlying color</view>
+		<view class="footer-text">
+			<view class="text-cn">底牌未揭，ALL IN 今夜</view>
+			<view class="text-en">TEXAS HOLD'EM & PREMIUM PUB</view>
+			<view class="text-en">May the flop be with you</view>
 		</view>
 	</view>
 </template>
@@ -88,6 +85,23 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@keyframes fadeInSlideUp {
+	0% { opacity: 0; transform: translateY(30rpx); }
+	100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+	0% { transform: scale(1); opacity: 0.6; }
+	50% { transform: scale(1.1); opacity: 0.8; }
+	100% { transform: scale(1); opacity: 0.6; }
+}
+
+@keyframes floatLogo {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
 .splash-container {
 	position: fixed;
 	top: 0;
@@ -97,7 +111,7 @@ onUnmounted(() => {
 	width: 100vw;
 	height: 100vh;
 	overflow: hidden;
-	background: linear-gradient(180deg, #080808 0%, #120f0c 62%, #22140d 100%);
+	background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
 }
 
 .fallback-background {
@@ -108,17 +122,18 @@ onUnmounted(() => {
 	left: 0;
 	z-index: 0;
 	background:
-		radial-gradient(circle at 84% 14%, rgba(239, 172, 56, 0.26) 0, rgba(239, 172, 56, 0) 10%),
-		radial-gradient(circle at 90% 27%, rgba(232, 144, 52, 0.2) 0, rgba(232, 144, 52, 0) 7%),
-		radial-gradient(circle at 82% 43%, rgba(253, 194, 98, 0.12) 0, rgba(253, 194, 98, 0) 6%);
+		radial-gradient(circle at 84% 14%, rgba(255, 204, 112, 0.2) 0, rgba(255, 204, 112, 0) 20%),
+		radial-gradient(circle at 90% 27%, rgba(255, 140, 0, 0.15) 0, rgba(255, 140, 0, 0) 15%),
+		radial-gradient(circle at 20% 70%, rgba(138, 43, 226, 0.1) 0, rgba(138, 43, 226, 0) 30%);
 }
 
 .glow {
 	position: absolute;
 	border-radius: 999rpx;
-	background: radial-gradient(circle, rgba(249, 178, 73, 0.85) 0, rgba(249, 178, 73, 0) 70%);
-	filter: blur(10rpx);
-	opacity: 0.72;
+	background: radial-gradient(circle, rgba(255, 204, 112, 0.8) 0, rgba(255, 204, 112, 0) 70%);
+	filter: blur(15rpx);
+	opacity: 0.6;
+	animation: pulseGlow 4s infinite ease-in-out;
 }
 
 .glow-top {
@@ -150,7 +165,7 @@ onUnmounted(() => {
 	position: absolute;
 	top: 0;
 	left: 0;
-	z-index: 1;
+	z-index: 0;
 }
 
 .screen-mask {
@@ -160,7 +175,7 @@ onUnmounted(() => {
 	bottom: 0;
 	left: 0;
 	z-index: 1;
-	background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.28) 48%, rgba(0, 0, 0, 0.52) 100%);
+	background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.7) 100%);
 }
 
 .logo-container {
@@ -171,20 +186,26 @@ onUnmounted(() => {
 	display: flex;
 	justify-content: center;
 	z-index: 2;
+	animation: floatLogo 6s infinite ease-in-out;
 	
 	.logo {
 		width: 400rpx;
 		height: 150rpx;
+		filter: drop-shadow(0 10rpx 20rpx rgba(0,0,0,0.5));
 	}
 
 	.logo-text {
 		color: #ffffff;
-		font-size: 120rpx;
+		font-size: 130rpx;
 		font-style: italic;
 		font-family: Georgia, 'Times New Roman', serif;
-		font-weight: 400;
-		letter-spacing: 4rpx;
-		text-shadow: 0 10rpx 32rpx rgba(0, 0, 0, 0.25);
+		font-weight: 500;
+		letter-spacing: 6rpx;
+		text-shadow: 0 15rpx 40rpx rgba(255, 190, 80, 0.4);
+		background: linear-gradient(to right, #ffd700, #ff8c00);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 }
 
@@ -193,13 +214,20 @@ onUnmounted(() => {
 	bottom: 92rpx;
 	right: 40rpx;
 	z-index: 5;
-	background-color: rgba(58, 58, 58, 0.5);
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(15px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 	color: #fff;
 	font-size: 26rpx;
-	padding: 10rpx 30rpx;
+	padding: 12rpx 36rpx;
 	border-radius: 40rpx;
-	backdrop-filter: blur(10px);
-	border: 1px solid rgba(255, 255, 255, 0.16);
+	transition: all 0.3s ease;
+}
+
+.skip-btn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .footer-text {
@@ -211,6 +239,8 @@ onUnmounted(() => {
 	flex-direction: column;
 	align-items: center;
 	z-index: 2;
+	opacity: 0;
+	animation: fadeInSlideUp 1.2s ease-out 0.5s forwards;
 	
 	.text-cn {
 		color: #ffffff;

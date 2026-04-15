@@ -10,45 +10,27 @@
 		<view class="top"></view>
 		<view class="content">
 			<view class="title">欢迎登录</view>
+			<view class="subtitle">TEXAS HOLD'EM & PUB</view>
 			
-			<input class="u-border-bottom" type="number" v-model="mobile" placeholder="请输入手机号" />
-			<view class="tips">未注册的手机号验证后自动创建账号</view>
-
-			
-			<view style="display: flex;">
-				<view style="width: 50%;">
-					<input style="height: 100rpx;"  class="u-border-bottom" type="number" v-model="captcha" placeholder="请输入验证码" />
-				</view>
-				<view style="width: 50%;">
-					<button style="height: 100rpx;" @tap="getCaptcha" :style="[captchaStyle]" class="getCaptcha">
-						{{captchaText}}
-						<uv-code :seconds="seconds" @end="endCaptcha" @start="startCaptcha" ref="uCode" @change="changeCapcha"></uv-code>
-					<!-- 	<u-verification-code :seconds="seconds" @end="endCaptcha" @change="changeCapcha" @start="startCaptcha" ref="uCode" >
-							
-						</u-verification-code> -->
-					</button>
-				</view>
-			</view>
-			
-			<button @tap="submit" style="color:#fff;background-color: #f9ae3d;" type="primary" class="login">登录</button>
-			
-		</view>
-		<view class="buttom">
-			<view class="loginType">
+			<view class="login-action">
 				<!-- #ifdef MP-WEIXIN -->
-				<button type="primary" size="default" class="login-btn" open-type="getPhoneNumber" @getphonenumber="loginForWechatMini">
-				<!-- 	<image src="/static/images/mine/wechat.png"></image> -->
-					手机号快捷登录
+				<button class="wechat-login-btn" open-type="getPhoneNumber" @getphonenumber="loginForWechatMini">
+					微信一键快捷登录
 				</button>
 				<!-- #endif -->
+				<!-- #ifndef MP-WEIXIN -->
+				<view class="tips">请在微信小程序中打开以使用一键登录</view>
+				<!-- #endif -->
 			</view>
+		</view>
+		
+		<view class="buttom">
 			<view class="hint">
-			<!-- 	<label class="label"> -->
-					<radio value="isChecked" @tap.stop="onChange" />
-					我已经阅读并遵守
-					<text class="link" @tap="serv(29,'用户协议')">《用户协议》</text>与
-						<text class="link"  @tap="serv(30,'隐私政策')">《隐私政策》</text>
-			<!-- 	</label> -->
+				<radio value="1" :checked="isChecked" @tap.stop="onChange" color="#d4a45b" style="transform: scale(0.7);" />
+				<text class="hint-text">我已经阅读并遵守</text>
+				<text class="link" @tap="serv(29,'用户协议')">《用户协议》</text>
+				<text class="hint-text">与</text>
+				<text class="link" @tap="serv(30,'隐私政策')">《隐私政策》</text>
 			</view>
 		</view>
 		<uv-toast ref="uToast"></uv-toast>
@@ -256,98 +238,85 @@ const onChange = () => {
 
 <style lang="scss" scoped>
 .wrap {
-	background-color: #ffffff;
+	background-color: #f5f2eb;
 	font-size: 28rpx;
 	position: relative;
-	height: 100%;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding-bottom: env(safe-area-inset-bottom);
+
 	.content {
 		width: 600rpx;
-		margin: 0 auto;
+		margin: 160rpx auto 0;
+		text-align: center;
 
 		.title {
-			text-align: left;
-			font-size: 60rpx;
-			font-weight: 500;
-			margin-bottom: 100rpx;
+			font-size: 64rpx;
+			font-weight: 900;
+			color: #120d0c;
+			margin-bottom: 12rpx;
+			letter-spacing: 2rpx;
 		}
-		input {
-			text-align: left;
-			margin-bottom: 10rpx;
-			padding-bottom: 6rpx;
+
+		.subtitle {
+			font-size: 24rpx;
+			color: #d4a45b;
+			font-weight: 700;
+			letter-spacing: 4rpx;
+			margin-bottom: 200rpx;
 		}
-		.tips {
-			color: $uv-info;
-			margin-bottom: 60rpx;
-			margin-top: 8rpx;
-		}
-		.getCaptcha {
-			background-color: rgb(253, 243, 208);
-			color: $uv-tips-color;
-			border: none;
-			font-size: 30rpx;
-			padding: 12rpx 0;
-			
-			&::after {
-				border: none;
-			}
-		}
-		.login {
-			background-color: rgb(253, 243, 208);
-			color: $uv-tips-color;
-			border: none;
-			font-size: 30rpx;
-			padding: 12rpx 0;
-			margin-top: 40rpx;
-			&::after {
-				border: none;
-			}
-		}
-		.alternative {
-			color: $uv-tips-color;
-			display: flex;
-			justify-content: space-between;
-			margin-top: 30rpx;
-		}
-	}
-	.buttom {
-		//position: absolute;
-		bottom: 0;
-		//display: flex;
-		//flex-direction: column;
-		//align-items: center;
-		//justify-content: center;
-		.loginType {
-			padding: 80rpx;
-			//justify-content:space-between;
-			
-			.login-btn {
-				background-color: #1aad19!important;
-				width: 100%;
-				border-radius: 50rem !important;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 10rpx 0;
-				text-align: center;
-				image {
-					width: 36rpx;
-					height: 30rpx;
-					margin-right: 10rpx;
-					vertical-align: middle;
+
+		.login-action {
+			margin-top: 60rpx;
+
+			.wechat-login-btn {
+				background: linear-gradient(135deg, #1aad19, #148b14) !important;
+				color: #ffffff;
+				font-size: 32rpx;
+				font-weight: 600;
+				border-radius: 999rpx;
+				height: 96rpx;
+				line-height: 96rpx;
+				box-shadow: 0 10rpx 30rpx rgba(26, 173, 25, 0.3);
+				transition: transform 0.2s, box-shadow 0.2s;
+				
+				&::after {
+					border: none;
+				}
+				
+				&:active {
+					transform: scale(0.96);
+					box-shadow: 0 4rpx 12rpx rgba(26, 173, 25, 0.2);
 				}
 			}
+
+			.tips {
+				color: #a2988c;
+				font-size: 24rpx;
+				margin-top: 20rpx;
+			}
 		}
+	}
+
+	.buttom {
+		padding: 40rpx 0;
 		
 		.hint {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			padding: 20rpx 40rpx;
-			font-size: 20rpx;
-			color: $uv-tips-color;
+			font-size: 22rpx;
+			
+			.hint-text {
+				color: #a2988c;
+			}
 			
 			.link {
-				color: $uv-warning;
+				color: #120d0c;
+				font-weight: 600;
+				margin: 0 4rpx;
 			}
 		}
 	}
