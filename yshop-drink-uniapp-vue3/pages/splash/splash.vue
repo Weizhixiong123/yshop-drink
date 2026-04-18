@@ -65,8 +65,8 @@ const skip = () => {
 
 	redirected = true;
 	clearTimer();
-	uni.switchTab({
-		url: '/pages/index/index'
+	uni.reLaunch({
+		url: '/pages/mine/mine'
 	});
 };
 

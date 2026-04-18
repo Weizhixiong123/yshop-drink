@@ -1,10 +1,42 @@
 <template>
 	<layout>
 		<view class="mine-container">
+
+			<!-- Bottom popup overlay -->
+			<view class="popup-mask" v-if="showPopup" @tap="closePopup"></view>
+			<view class="popup-card" :class="{ 'popup-show': showPopup }">
+				<view class="popup-close" @tap="closePopup">×</view>
+				<image class="popup-logo" src="/static/images/login_bg.jpg" mode="aspectFill"></image>
+				<view class="popup-title">欢迎加入 醉<text class="spade">♠</text>岛 Bar</view>
+
+				<!-- #ifdef MP-WEIXIN -->
+				<button class="phone-login-btn" open-type="getPhoneNumber" @getphonenumber="loginForWechatMini">
+					手机号快捷登录
+				</button>
+				<!-- #endif -->
+
+				<!-- #ifndef MP-WEIXIN -->
+				<button class="phone-login-btn" @tap="showManualLogin">
+					手机号快捷登录
+				</button>
+				<!-- #endif -->
+
+				<view class="popup-hint" @tap="onChange">
+					<view class="custom-radio" :class="{ 'is-checked': isChecked }">
+						<view class="radio-inner" v-if="isChecked"></view>
+					</view>
+					<view class="hint-content">
+						<text class="hint-text">允许我们在必要场景下，合理使用您的个人信息，并且充分保障您的合法权利 我已阅读并同意</text>
+						<text class="link" @tap.stop="serv({type:'content', id:29, name:'用户协议'})">《用户协议》</text>
+					</view>
+				</view>
+			</view>
+			<uv-toast ref="uToast"></uv-toast>
+
 			<!-- Top Background -->
 			<view class="bg-box">
 				<!-- We use a background image matching the theme, you can replace the src with your actual background asset -->
-				<image class="bg-img" src="https://images.unsplash.com/photo-1527281400683-1aae777175f8?q=80&w=600&auto=format&fit=crop" mode="aspectFill"></image>
+				<image class="bg-img" src="/static/images/mine_header_bg_unsplash.jpg" mode="aspectFill"></image>
 				
 				<view :style="{ height: statusBarHeight + 'px' }"></view>
 				<view class="nav-bar"></view>
@@ -16,7 +48,7 @@
 					</view>
 					<view class="user-name">
 						<view v-if="isLogin" class="name-text text-truncate" @tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">{{ member.nickname }}</view>
-						<view v-else class="name-text" @tap="login">Seer Bar用户</view>
+						<view v-else class="name-text" @tap="login">醉<text class="spade">♠</text>岛 Bar用户</view>
 					</view>
 				</view>
 			</view>
@@ -26,39 +58,33 @@
 				<view class="white-card">
 					<view class="card-header d-flex justify-content-between align-items-center">
 						<view class="welcome">
-							<view class="title">欢迎加入Seer Bar</view>
-							<view class="subtitle">登录后解锁更多专属特权</view>
+							<view class="title">欢迎加入醉<text class="spade">♠</text>岛 Bar</view>
+							<view class="subtitle">登录后查看账户信息</view>
 						</view>
 						<view class="login-btn" @tap="login" v-if="!isLogin">注册/登录</view>
 					</view>
-					
+
 					<view class="stats-row d-flex align-items-center">
-						<view class="stat-item flex-1" @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=0'})">
-							<view class="stat-label">余额</view>
-							<view class="stat-value">{{ isLogin ? member.nowMoney : '*' }}</view>
+						<view class="stat-item flex-1">
+							<view class="stat-label">存酒</view>
+							<view class="stat-value">{{ isLogin ? (member.wineCount || 0) : '*' }}</view>
 						</view>
 						<view class="divider"></view>
-						<view class="stat-item flex-1" @tap="serv({type:'pages',pages:'/pages/components/pages/coupons/coupons'})">
-							<view class="stat-label">优惠券</view>
-							<view class="stat-value">{{ isLogin ? member.couponCount : '*' }}</view>
-						</view>
-						<view class="divider"></view>
-						<view class="stat-item flex-1" @tap="serv({type:'pages', pages: '/pages/components/pages/balance/bill?cate=1'})">
+						<view class="stat-item flex-1">
 							<view class="stat-label">积分</view>
-							<view class="stat-value">{{ isLogin ? member.integral : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? (member.integral || 0) : '*' }}</view>
+						</view>
+						<view class="divider"></view>
+						<view class="stat-item flex-1">
+							<view class="stat-label">储值余额</view>
+							<view class="stat-value">{{ isLogin ? (member.nowMoney || '0') : '*' }}</view>
 						</view>
 					</view>
-				</view>
 
-				<!-- Services List -->
-				<view class="service-list">
-					<uv-cell-group :border="false">
-						<block v-for="(item, index) in services" :key='index'>
-							<uv-cell :title="item.name" v-if="item.type == 'contact'" :isLink="true" :border="index !== services.length - 1"></uv-cell>
-							<uv-cell :isLink="true" :title="item.name" v-else-if="item.type == 'call'" v-on:click="makePhoneCall(item.phone)" :border="index !== services.length - 1"></uv-cell>
-							<uv-cell :isLink="true" :title="item.name" v-else @tap="serv(item)" :border="index !== services.length - 1"></uv-cell>
-						</block>
-					</uv-cell-group>
+					<view class="remark-row" v-if="isLogin">
+						<view class="remark-label">备注</view>
+						<view class="remark-content">{{ member.remark || member.mark || '暂无备注信息' }}</view>
+					</view>
 				</view>
 			</view>
 		</view>
@@ -75,16 +101,22 @@ import { storeToRefs } from 'pinia'
 import { onLoad,onShow} from '@dcloudio/uni-app'
 import { formatDateTime,kmUnit } from '@/utils/util'
 import {
-  userGetUserInfo,
-  mineService
+  userGetUserInfo
 } from '@/api/user'
+import {
+  userAuthSession,
+  userLoginForWechatMini
+} from '@/api/auth'
 
 const main = useMainStore()
 const { member,isLogin } = storeToRefs(main)
 
 const title = ref('个人中心')
-const services = ref([])
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
+const showPopup = ref(false)
+const isChecked = ref(false)
+const openid = ref(main.openid)
+const uToast = ref()
 
 const growthValue = computed(() => { 
 	if (!isLogin.value) return 0
@@ -95,12 +127,78 @@ const growthValue = computed(() => {
 	return currentValue / (currentValue + needValue) * 100
 })
 
-onLoad(() => {
-	getServices();
-})	
 onShow(() => {
 	getUserInfo();
+	// #ifdef MP-WEIXIN
+	if(!openid.value){
+		wechatMiniLogin();
+	}
+	// #endif
 })
+
+const wechatMiniLogin = () => {
+	uni.login({
+		provider: 'weixin'
+	}).then(async (res) => {
+		let data = await userAuthSession({
+			code: res.code
+		});
+		if (data) {
+			main.SET_OPENID(data.openId)
+			openid.value = data.openId
+		}
+	});
+}
+
+const loginForWechatMini = async (e) => {
+	if(!isChecked.value){
+		uToast.value.show({
+			message: '请先勾选同意用户协议',
+			type: 'error'
+		});
+		return
+	}
+	if (e.detail.encryptedData && e.detail.iv) {
+		let data = await userLoginForWechatMini({
+			encryptedData: e.detail.encryptedData,
+			iv: e.detail.iv,
+			openid: openid.value
+		});
+		if (data) {
+			uni.setStorage({
+				key: 'userinfo',
+				data: data.userInfo
+			});
+			uni.setStorage({
+				key: 'accessToken',
+				data: data.accessToken
+			});
+			main.SET_MEMBER(data.userInfo);
+			main.SET_TOKEN(data.accessToken);
+			uToast.value.show({
+				message: '登录成功',
+				type: 'success'
+			});
+            getUserInfo();
+			closePopup();
+		}
+	}
+}
+
+const showManualLogin = () => {
+	uToast.value.show({
+		message: '请在微信小程序中使用快捷登录',
+		type: 'warning'
+	});
+}
+
+const closePopup = () => {
+	showPopup.value = false;
+}
+
+const onChange = () => {
+	isChecked.value = !isChecked.value
+}
 
 const getUserInfo = async() => {
 	if (isLogin.value) {
@@ -110,63 +208,11 @@ const getUserInfo = async() => {
 		}
 	}
 }
-const defaultServices = [
-	{ name: '订单中心', type: 'pages', pages: '/pages/components/pages/orders/orders' },
-	{ name: '个人信息', type: 'pages', pages: '/pages/components/pages/mine/userinfo' },
-	{ name: '客服中心', type: 'contact' },
-	{ name: '我的地址', type: 'pages', pages: '/pages/components/pages/address/address' },
-	{ name: '会员储值', type: 'pages', pages: '/pages/components/pages/balance/bill?cate=0' },
-	{ name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' },
-	{ name: '我的优惠券', type: 'pages', pages: '/pages/components/pages/coupons/coupons' },
-]
 
-const getServices = async() => {
-	let data = null;
-	try {
-		data = await mineService();
-	} catch(e) {
-		console.log('mineService error:', e);
-	}
-	
-	if (data && data.length > 0) {
-		const hasUserInfo = data.some(item => item.name === '个人信息');
-		const hasScore = data.some(item => item.name === '积分商城');
-
-		if (!hasUserInfo) {
-			data.splice(1, 0, { name: '个人信息', type: 'pages', pages: '/pages/components/pages/mine/userinfo' });
-		}
-		if (!hasScore) {
-			let couponIdx = data.findIndex(item => item.name === '我的优惠券' || item.name === '卡券中心');
-			if (couponIdx !== -1) {
-				data.splice(couponIdx, 0, { name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' });
-			} else {
-				data.push({ name: '积分商城', type: 'pages', pages: '/pages/components/pages/scoreproduct/list' });
-			}
-		}
-		services.value = data;
-	} else {
-		services.value = defaultServices;
-	}
-}
-const makePhoneCall = (phoneNumber) => {
-	uni.makePhoneCall({
-		phoneNumber: phoneNumber,
-	})
-}
 const login = () => {
-	uni.navigateTo({
-		url: '/pages/components/pages/login/login'
-	})
+	showPopup.value = true;
 }
-const packages = () => {
-	if (!isLogin.value) {
-		login()
-		return
-	}
-	uni.navigateTo({
-		url: '/pages/components/pages/packages/index'
-	})
-}
+
 const serv = (item) => {
 	switch (item.type) {
 		case 'pages':
@@ -262,6 +308,14 @@ const serv = (item) => {
 					font-weight: bold;
 					color: #ffffff;
 					text-shadow: 0 2rpx 10rpx rgba(0,0,0,0.5);
+					
+					.spade {
+						color: #111111;
+						-webkit-text-stroke: 2px #ffffff;
+						font-weight: 900;
+						text-shadow: none;
+						margin: 0 4rpx;
+					}
 				}
 			}
 		}
@@ -290,6 +344,16 @@ const serv = (item) => {
 					font-weight: bold;
 					color: #333333;
 					margin-bottom: 12rpx;
+					
+					.spade {
+						color: #111111;
+						-webkit-text-stroke: 1.5px #ffffff;
+						position: relative;
+						font-weight: 900;
+						margin: 0 2rpx;
+						/* 增加文字阴影，使白色描边能在白底上凸显 */
+						text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.4);
+					}
 				}
 				.subtitle {
 					font-size: 24rpx;
@@ -334,22 +398,179 @@ const serv = (item) => {
 				background-color: #f0f0f0;
 			}
 		}
+
+		.remark-row {
+			background-color: #f9f9f9;
+			border-radius: 12rpx;
+			padding: 24rpx;
+			margin-top: 30rpx;
+			text-align: left;
+
+			.remark-label {
+				font-size: 24rpx;
+				color: #999999;
+				margin-bottom: 10rpx;
+			}
+			.remark-content {
+				font-size: 28rpx;
+				color: #333333;
+				line-height: 1.5;
+			}
+		}
 	}
 
-	.service-list {
-		background-color: #ffffff;
-		border-radius: 20rpx;
-		padding: 10rpx 20rpx;
-		margin-bottom: 40rpx;
-		box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.02);
+	/* Popup mask */
+	.popup-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.72);
+		z-index: 100;
+	}
 
-		::v-deep .uv-cell {
-			padding: 30rpx 10rpx !important;
+	/* Bottom popup card */
+	.popup-card {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 101;
+		background: #ffffff;
+		border-top-left-radius: 34rpx;
+		border-top-right-radius: 34rpx;
+		padding: 58rpx 44rpx calc(58rpx + env(safe-area-inset-bottom));
+		transform: translateY(100%);
+		transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 -18rpx 48rpx rgba(0, 0, 0, 0.16);
+		border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+		&::before {
+			content: '';
+			position: absolute;
+			top: 18rpx;
+			left: 50%;
+			width: 76rpx;
+			height: 8rpx;
+			border-radius: 999rpx;
+			background: rgba(0, 0, 0, 0.12);
+			transform: translateX(-50%);
 		}
-		
-		::v-deep .uv-cell__title-text {
-			font-size: 30rpx;
-			color: #333333;
+
+		&.popup-show {
+			transform: translateY(0);
+		}
+
+		.popup-close {
+			position: absolute;
+			top: 34rpx;
+			right: 34rpx;
+			width: 58rpx;
+			height: 58rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: #f5f5f5;
+			border-radius: 50%;
+			font-size: 42rpx;
+			color: #111111;
+			line-height: 1;
+			padding-bottom: 4rpx;
+		}
+
+		.popup-logo {
+			width: 112rpx;
+			height: 112rpx;
+			border-radius: 50%;
+			margin-bottom: 26rpx;
+			display: block;
+			background: #f5f5f5;
+			border: 2rpx solid rgba(0, 0, 0, 0.08);
+			box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.12);
+		}
+
+		.popup-title {
+			font-size: 36rpx;
+			font-weight: 700;
+			color: #111111;
+			margin-bottom: 52rpx;
+			letter-spacing: 0;
+			
+			.spade {
+				color: #111111;
+				-webkit-text-stroke: 1.5px #ffffff;
+				font-weight: 900;
+				margin: 0 2rpx;
+			}
+		}
+
+		.phone-login-btn {
+			width: 100%;
+			height: 96rpx;
+			line-height: 96rpx;
+			background: #111111;
+			color: #ffffff;
+			font-size: 32rpx;
+			font-weight: 700;
+			border-radius: 48rpx;
+			margin-bottom: 32rpx;
+			letter-spacing: 0;
+			box-shadow: 0 12rpx 28rpx rgba(0, 0, 0, 0.16);
+
+			&::after { border: none; }
+			&:active { transform: scale(0.98); opacity: 0.9; }
+		}
+
+		.popup-hint {
+			display: flex;
+			align-items: flex-start;
+			padding: 22rpx 24rpx;
+			background: #f7f7f7;
+			border: 1px solid rgba(0, 0, 0, 0.06);
+			border-radius: 20rpx;
+			font-size: 22rpx;
+			line-height: 36rpx;
+
+			.custom-radio {
+				width: 30rpx;
+				height: 30rpx;
+				border-radius: 50%;
+				border: 2rpx solid #d8d8d8;
+				margin-right: 16rpx;
+				margin-top: 4rpx;
+				flex-shrink: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				box-sizing: border-box;
+
+				&.is-checked {
+					border-color: #111111;
+					background-color: #111111;
+				}
+
+				.radio-inner {
+					width: 12rpx;
+					height: 12rpx;
+					border-radius: 50%;
+					background-color: #ffffff;
+				}
+			}
+
+			.hint-content {
+				flex: 1;
+			}
+
+			.hint-text {
+				color: #8a8a8a;
+			}
+
+			.link {
+				color: #111111;
+				font-weight: 600;
+			}
 		}
 	}
+
 </style>

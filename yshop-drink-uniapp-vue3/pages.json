@@ -212,34 +212,5 @@
     "backgroundColor": "#F8F8F8",
     "navigationStyle": "custom"
   },
-  "tabBar": {
-  		"color": "#a2988c",
-  		"selectedColor": "#000000",
-  		"backgroundColor": "#ffffff",
-  		"borderStyle": "white",
-  		"list": [{
-  				"pagePath": "pages/index/index",
-  				"text": "首页",
-  				"iconPath": "static/images/tabBar/index.png",
-  				"selectedIconPath": "static/images/tabBar/index_selected.png"
-  			},
-  			{
-  				"pagePath": "pages/menu/menu",
-  				"text": "点单",
-  				"iconPath": "static/images/tabBar/drink.png",
-  				"selectedIconPath": "static/images/tabBar/drink-selected.png"
-  			},{
-  				"pagePath": "pages/order/order",
-  				"text": "订单",
-  				"iconPath": "static/images/tabBar/order.png",
-  				"selectedIconPath": "static/images/tabBar/order-selected.png"
-  			}, {
-  				"pagePath": "pages/mine/mine",
-  				"text": "我的",
-  				"iconPath": "static/images/tabBar/mine.png",
-  				"selectedIconPath": "static/images/tabBar/mine_selected.png"
-  			}
-  		]
-  	},
   "uniIdRouter": {}
 }
