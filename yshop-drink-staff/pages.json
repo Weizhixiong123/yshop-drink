@@ -1,0 +1,27 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "black" }
+    },
+    {
+      "path": "pages/staff/add",
+      "style": { "navigationBarTitleText": "会员开卡", "navigationBarBackgroundColor": "#ffffff", "navigationBarTextStyle": "black" }
+    },
+    {
+      "path": "pages/staff/search",
+      "style": { "navigationBarTitleText": "会员查询", "navigationBarBackgroundColor": "#ffffff", "navigationBarTextStyle": "black" }
+    },
+    {
+      "path": "pages/staff/detail",
+      "style": { "navigationBarTitleText": "会员详情", "navigationBarBackgroundColor": "#ffffff", "navigationBarTextStyle": "black" }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "员工工作台",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f2eb",
+    "navigationStyle": "default"
+  }
+}
