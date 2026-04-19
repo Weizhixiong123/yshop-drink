@@ -1,0 +1,94 @@
+/* ===========================
+   TEXAS BAR · Admin Console
+   (Matching Staff & Client Style: 醉♠岛 Bar)
+   =========================== */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* 基础配色 - 德州风高对比度 */
+  --bg-body: #f5f2eb;        /* 护眼奶油白/米色底 */
+  --bg-dark: #120d0c;        /* 极致深灰/黑 (Hero背景) */
+  --bg-card: #ffffff;        /* 纯白卡片 */
+  
+  --text-main: #111111;      /* 主文本黑 */
+  --text-light: #ffffff;     /* 亮文本 */
+  --text-muted: #8a8a8a;     /* 辅助灰 */
+  
+  --tx-red: #c1272d;         /* 扑克红/筹码红 */
+  --tx-black: #1a1a1a;       /* 扑克黑/筹码黑 */
+  --tx-blue: #09b4f1;        /* 主题蓝 (来自uni.scss) */
+  --tx-green: #5ac725;
+
+  /* 阴影与圆角 */
+  --shadow-card: 0 14px 36px rgba(32, 20, 12, 0.08); /* 偏暖的实体阴影 */
+  --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --radius-card: 16px;
+  --radius-sm: 8px;
+
+  /* 字体 */
+  --font-sans: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-impact: Impact, Arial, sans-serif; /* 美式海报粗斜体 */
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-body);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
+}
+
+/* 统一的白底卡片容器 */
+.card-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* 原生滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.4);
+}
+
+/* 按钮 - 面包块质感 */
+.btn-solid {
+  background: var(--text-main);
+  color: var(--text-light);
+  border: none;
+  font-weight: bold;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.btn-solid:hover {
+  background: var(--tx-black);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.btn-solid:active {
+  transform: translateY(0);
+}
