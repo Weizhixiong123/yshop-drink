@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Data
 public class StaffResponse {
     private Long id;
-    private String username;
+    private String phone;
     private String name;
     private String role;
     private Integer status;

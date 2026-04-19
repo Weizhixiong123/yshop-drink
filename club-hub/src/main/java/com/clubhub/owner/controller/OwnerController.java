@@ -6,7 +6,6 @@ import com.clubhub.entity.OperationLog;
 import com.clubhub.enums.OperationType;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
-import com.clubhub.owner.request.StaffPasswordResetRequest;
 import com.clubhub.owner.service.OwnerService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -48,11 +47,6 @@ public class OwnerController {
     @DeleteMapping("/staff/{id}")
     public Result<?> deleteStaff(@PathVariable Long id) {
         return ownerService.deleteStaff(id);
-    }
-
-    @PutMapping("/staff/password/reset")
-    public Result<?> resetStaffPassword(@RequestBody @Valid StaffPasswordResetRequest request) {
-        return ownerService.resetStaffPassword(request);
     }
 
     // ========== 操作日志 ==========

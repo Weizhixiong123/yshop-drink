@@ -2,6 +2,7 @@ package com.clubhub.auth.controller;
 
 import com.clubhub.auth.request.CustomerLoginRequest;
 import com.clubhub.auth.request.StaffLoginRequest;
+import com.clubhub.auth.request.StaffWxLoginRequest;
 import com.clubhub.auth.service.AuthService;
 import com.clubhub.dto.Result;
 import jakarta.validation.Valid;
@@ -16,11 +17,19 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 店东/店员登录
+     * 店东账号密码登录
      */
     @PostMapping("/staff/login")
     public Result<?> staffLogin(@RequestBody @Valid StaffLoginRequest request) {
         return authService.staffLogin(request);
+    }
+
+    /**
+     * 店员微信手机号授权登录
+     */
+    @PostMapping("/staff/wx-login")
+    public Result<?> staffWxLogin(@RequestBody @Valid StaffWxLoginRequest request) {
+        return authService.staffWxLogin(request);
     }
 
     /**

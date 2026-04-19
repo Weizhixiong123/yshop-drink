@@ -13,12 +13,12 @@ import com.clubhub.staff.request.MemberInfoUpdateRequest;
 import com.clubhub.staff.request.MemberOperateRequest;
 import com.clubhub.staff.request.MemberRegisterRequest;
 import com.clubhub.staff.request.MemberRemarkUpdateRequest;
-import com.clubhub.staff.request.StaffPasswordChangeRequest;
 import com.clubhub.staff.response.MemberDetailResponse;
 import com.clubhub.staff.response.MemberOperateResponse;
 import com.clubhub.staff.response.MemberSearchItemResponse;
 import com.clubhub.staff.service.StaffService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +34,9 @@ public class StaffServiceImpl implements StaffService {
     private final StaffMapper staffMapper;
     private final MemberMapper memberMapper;
     private final OperationLogMapper operationLogMapper;
+
+    @Value("${owner.account.name:店东}")
+    private String ownerName;
 
     @Override
     public Result<?> registerMember(MemberRegisterRequest request) {
@@ -244,27 +247,10 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Result<?> changePassword(Long staffId, StaffPasswordChangeRequest request) {
-        String newPassword = request.getNewPassword();
-        if (newPassword == null || newPassword.length() < 6) {
-            return Result.fail("新密码至少 6 位");
-        }
-        Staff staff = staffMapper.selectById(staffId);
-        if (staff == null) {
-            return Result.fail("用户不存在");
-        }
-        if (!staff.getPassword().equals(request.getOldPassword())) {
-            return Result.fail("原密码错误");
-        }
-        Staff update = new Staff();
-        update.setId(staffId);
-        update.setPassword(newPassword);
-        staffMapper.updateById(update);
-        return Result.ok();
-    }
-
-    @Override
     public String getNameById(Long staffId) {
+        if (Long.valueOf(0L).equals(staffId)) {
+            return ownerName == null || ownerName.isBlank() ? "店东" : ownerName.trim();
+        }
         Staff staff = staffMapper.selectById(staffId);
         return staff != null ? staff.getName() : "未知员工";
     }

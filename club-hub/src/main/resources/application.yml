@@ -24,3 +24,18 @@ mybatis-plus:
 jwt:
   secret: club-hub-secret-key-change-this-in-production-2024
   expiration: 86400000  # 24小时
+
+# 店东后台账号配置
+owner:
+  account:
+    username: admin
+    password: admin123
+    name: 店东
+
+# 微信小程序手机号登录配置
+# 本地测试可先配置 mock-phone，后端会直接用该手机号匹配员工表，不调用微信接口。
+wechat:
+  miniapp:
+    app-id:
+    app-secret:
+    mock-phone:

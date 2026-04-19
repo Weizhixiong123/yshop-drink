@@ -5,7 +5,6 @@ import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
-import com.clubhub.owner.request.StaffPasswordResetRequest;
 
 import java.util.List;
 
@@ -20,8 +19,6 @@ public interface OwnerService {
     Result<?> updateStaffStatus(Long id, Integer status);
 
     Result<?> deleteStaff(Long id);
-
-    Result<?> resetStaffPassword(StaffPasswordResetRequest request);
 
     // ========== 操作日志 ==========
 

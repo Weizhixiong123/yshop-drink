@@ -11,7 +11,6 @@ import com.clubhub.mapper.OperationLogMapper;
 import com.clubhub.mapper.StaffMapper;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
-import com.clubhub.owner.request.StaffPasswordResetRequest;
 import com.clubhub.owner.response.OperationLogPageResponse;
 import com.clubhub.owner.response.StaffResponse;
 import com.clubhub.owner.response.TodayStatResponse;
@@ -39,13 +38,15 @@ public class OwnerServiceImpl implements OwnerService {
 
     @Override
     public Result<?> addStaff(StaffAddRequest request) {
+        String phone = request.getPhone().trim();
         Staff exist = staffMapper.selectOne(
-                new LambdaQueryWrapper<Staff>().eq(Staff::getUsername, request.getUsername()));
+                new LambdaQueryWrapper<Staff>().eq(Staff::getPhone, phone));
         if (exist != null) {
-            return Result.fail("账号已存在");
+            return Result.fail("手机号已被设置为员工");
         }
         Staff staff = new Staff();
-        BeanUtils.copyProperties(request, staff);
+        staff.setPhone(phone);
+        staff.setName(request.getName().trim());
         staff.setRole("staff");
         staff.setStatus(1);
         staff.setDeleted(0);
@@ -77,26 +78,6 @@ public class OwnerServiceImpl implements OwnerService {
     @Override
     public Result<?> deleteStaff(Long id) {
         staffMapper.deleteById(id);
-        return Result.ok();
-    }
-
-    @Override
-    public Result<?> resetStaffPassword(StaffPasswordResetRequest request) {
-        String newPassword = request.getNewPassword();
-        if (newPassword == null || newPassword.length() < 6) {
-            return Result.fail("新密码至少 6 位");
-        }
-        Staff staff = staffMapper.selectById(request.getId());
-        if (staff == null) {
-            return Result.fail("员工不存在");
-        }
-        if ("owner".equals(staff.getRole())) {
-            return Result.fail("不能通过此接口重置店东密码");
-        }
-        Staff update = new Staff();
-        update.setId(request.getId());
-        update.setPassword(newPassword);
-        staffMapper.updateById(update);
         return Result.ok();
     }
 

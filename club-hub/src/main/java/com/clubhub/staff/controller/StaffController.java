@@ -5,7 +5,6 @@ import com.clubhub.staff.request.MemberInfoUpdateRequest;
 import com.clubhub.staff.request.MemberOperateRequest;
 import com.clubhub.staff.request.MemberRegisterRequest;
 import com.clubhub.staff.request.MemberRemarkUpdateRequest;
-import com.clubhub.staff.request.StaffPasswordChangeRequest;
 import com.clubhub.staff.service.StaffService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -71,13 +70,4 @@ public class StaffController {
         return staffService.updateMemberInfo(request);
     }
 
-    /**
-     * 员工修改自己密码
-     */
-    @PutMapping("/password")
-    public Result<?> changePassword(@RequestBody @Valid StaffPasswordChangeRequest request,
-                                    HttpServletRequest httpRequest) {
-        Long staffId = (Long) httpRequest.getAttribute("userId");
-        return staffService.changePassword(staffId, request);
-    }
 }

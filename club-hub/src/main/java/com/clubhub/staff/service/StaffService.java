@@ -6,7 +6,6 @@ import com.clubhub.staff.request.MemberInfoUpdateRequest;
 import com.clubhub.staff.request.MemberOperateRequest;
 import com.clubhub.staff.request.MemberRegisterRequest;
 import com.clubhub.staff.request.MemberRemarkUpdateRequest;
-import com.clubhub.staff.request.StaffPasswordChangeRequest;
 
 public interface StaffService {
 
@@ -39,11 +38,6 @@ public interface StaffService {
      * 修改会员基本信息（姓名/性别/手机号）
      */
     Result<?> updateMemberInfo(MemberInfoUpdateRequest request);
-
-    /**
-     * 员工修改自己的密码
-     */
-    Result<?> changePassword(Long staffId, StaffPasswordChangeRequest request);
 
     /**
      * 根据ID获取员工姓名
