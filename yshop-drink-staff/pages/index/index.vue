@@ -65,6 +65,17 @@
 </template>
 
 <script setup>
+import { onShow } from '@dcloudio/uni-app'
+import cookie from '@/utils/cookie'
+
+// 进入操作台时检查登录状态
+onShow(() => {
+  const token = cookie.get('accessToken')
+  if (!token) {
+    uni.redirectTo({ url: '/pages/login/login' })
+  }
+})
+
 const navTo = (url) => {
   uni.navigateTo({ url })
 }

@@ -47,7 +47,9 @@ function uniRequest(url, data, options) {
         }
 
         if (res.statusCode !== 200) {
-          reject({ msg: '请求失败', res, data: resData })
+          const msg = resData.msg || '请求失败'
+          uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+          reject({ msg, res, data: resData })
           return
         }
 
@@ -59,8 +61,9 @@ function uniRequest(url, data, options) {
           return
         }
 
-        if (resData.code != 0) {
-          uni.showToast({ title: resData.msg, icon: 'none', duration: 2000 })
+        const successCodes = [0, 200]
+        if (!successCodes.includes(Number(resData.code))) {
+          uni.showToast({ title: resData.msg || '请求失败', icon: 'none', duration: 2000 })
           reject({ data: resData, res })
           return
         }

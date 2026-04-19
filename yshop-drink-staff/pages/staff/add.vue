@@ -47,6 +47,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { memberRegister } from '@/api/staff'
 
 const form = ref({
   name: '',
@@ -58,19 +59,23 @@ const form = ref({
   remark: ''
 })
 
+const submitting = ref(false)
+
 const checkPhone = () => {
   if (form.value.phone.length === 11) {
-    if (form.value.phone === '13800138000') {
+    // 手机号格式校验
+    const phoneReg = /^1[3-9]\d{9}$/
+    if (!phoneReg.test(form.value.phone)) {
       uni.showToast({
-        title: '该手机号已注册会员，请勿重复开卡',
+        title: '请输入正确的手机号',
         icon: 'none',
-        duration: 3000
+        duration: 2000
       })
     }
   }
 }
 
-const submit = () => {
+const submit = async () => {
   if (!form.value.phone) {
     uni.showToast({ title: '手机号为必填项', icon: 'none' })
     return
@@ -79,15 +84,42 @@ const submit = () => {
     uni.showToast({ title: '请输入正确的11位手机号', icon: 'none' })
     return
   }
-  
+  const phoneReg = /^1[3-9]\d{9}$/
+  if (!phoneReg.test(form.value.phone)) {
+    uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
+    return
+  }
+
+  if (submitting.value) return
+  submitting.value = true
+
+  // 组装请求参数，映射字段名
+  const data = {
+    name: form.value.name || undefined,
+    gender: form.value.gender === 1 ? 'M' : 'F',
+    phone: form.value.phone,
+    wine: form.value.liquor ? Number(form.value.liquor) : undefined,
+    points: form.value.points ? Number(form.value.points) : undefined,
+    balance: form.value.balance ? Number(form.value.balance) : undefined,
+    remark: form.value.remark || undefined
+  }
+
   uni.showLoading({ title: '正在开卡...' })
-  setTimeout(() => {
+
+  try {
+    await memberRegister(data)
     uni.hideLoading()
     uni.showToast({ title: '开卡成功', icon: 'success' })
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
-  }, 800)
+  } catch (err) {
+    uni.hideLoading()
+    // api.js 内部已处理 toast 错误提示，此处仅做 console 记录
+    console.error('[memberRegister] error:', err)
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 

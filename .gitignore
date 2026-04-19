@@ -1,5 +1,7 @@
 /.git
 /.idea
+/club-hub/.idea/
+/club-hub/target/
 *.log
 *.DS_Store
 /yshop-drink-boot3/target/

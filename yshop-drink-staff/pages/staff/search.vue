@@ -58,28 +58,23 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { memberSearch } from '@/api/staff'
 
 const keyword = ref('')
 const hasSearched = ref(false)
 const results = ref([])
 
-const db = [
-  { id: 1, name: '陈先生', phone: '13812345678', liquor: 2, points: 500, balance: '1000.00', remark: '喜欢窗边位置' },
-  { id: 2, name: '李女士', phone: '13987655678', liquor: 0, points: 150, balance: '200.00', remark: '不要加冰' },
-  { id: 3, name: '张先生', phone: '13500000001', liquor: 12, points: 8888, balance: '5000.00', remark: '大客户' },
-  { id: 4, name: '王老板', phone: '13800001111', liquor: 5, points: 2000, balance: '8888.00', remark: '尾号1111测试账户' },
-]
-
 const displayResults = computed(() => results.value)
 
 const getMaskedPhone = (phone) => {
+  if (!phone) return '****'
   if(results.value.length > 1) {
     return phone;
   }
   return `****${phone.slice(-4)}`
 }
 
-const doSearch = () => {
+const doSearch = async () => {
   if (!keyword.value) {
     uni.showToast({ title: '请输入搜索词', icon: 'none' })
     return
@@ -88,16 +83,30 @@ const doSearch = () => {
   hasSearched.value = true;
   uni.showLoading({ title: '搜索中...' })
   
-  setTimeout(() => {
-    const res = db.filter(m => m.phone.includes(keyword.value))
-    results.value = res;
+  try {
+    const data = await memberSearch(keyword.value)
+    // API 返回的 wine 字段映射为前端的 liquor 以保持显示一致
+    if (Array.isArray(data)) {
+      results.value = data.map(item => ({
+        ...item,
+        liquor: item.wine != null ? item.wine : item.liquor,
+        balance: item.balance != null ? Number(item.balance).toFixed(2) : '0.00'
+      }))
+    } else {
+      results.value = []
+    }
+  } catch (err) {
+    console.error('[memberSearch] error:', err)
+    results.value = []
+  } finally {
     uni.hideLoading()
-  }, 400)
+  }
 }
 
 const navToDetail = (item) => {
+  // 使用会员 ID 跳转到详情页，由详情页调 API 获取最新数据
   uni.navigateTo({
-    url: `/pages/staff/detail?member=${encodeURIComponent(JSON.stringify(item))}`
+    url: `/pages/staff/detail?id=${item.id}`
   })
 }
 </script>

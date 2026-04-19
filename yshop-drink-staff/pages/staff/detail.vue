@@ -96,18 +96,48 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { memberDetail, memberOperate, memberUpdateRemark } from '@/api/staff'
 
 const member = ref(null)
+const memberId = ref(null)
 
 const showModal = ref(false)
-const opTarget = ref('') // 'liquor' | 'points'
+const opTarget = ref('') // 'liquor' | 'points' | 'balance'
 const opType = ref('')   // 'add' | 'sub'
 const opAmount = ref('')
+const submitting = ref(false)
+
+/**
+ * 加载会员详情
+ */
+const loadMember = async (id) => {
+  try {
+    const data = await memberDetail(id)
+    if (data) {
+      member.value = {
+        ...data,
+        // API 返回 wine，前端保持 liquor 命名以兼容模板
+        liquor: data.wine != null ? data.wine : (data.liquor || 0),
+        balance: data.balance != null ? Number(data.balance).toFixed(2) : '0.00',
+        points: data.points || 0
+      }
+    }
+  } catch (err) {
+    console.error('[memberDetail] error:', err)
+    uni.showToast({ title: '加载会员信息失败', icon: 'none' })
+  }
+}
 
 onLoad((options) => {
-  if (options.member) {
+  if (options.id) {
+    memberId.value = options.id
+    loadMember(options.id)
+  } else if (options.member) {
+    // 兼容旧的 JSON 传参方式
     try {
-      member.value = JSON.parse(decodeURIComponent(options.member))
+      const parsed = JSON.parse(decodeURIComponent(options.member))
+      member.value = parsed
+      memberId.value = parsed.id
     } catch(e) {
       console.error(e)
     }
@@ -160,7 +190,23 @@ const closeModal = () => {
   showModal.value = false
 }
 
-const submitOp = () => {
+/**
+ * 将前端的 target + type 映射为 API 的 enum 类型
+ * target: 'liquor' | 'points' | 'balance'
+ * type: 'add' | 'sub'
+ * => 'ADD_WINE' | 'SUB_WINE' | 'ADD_POINTS' | 'SUB_POINTS' | 'ADD_BALANCE' | 'SUB_BALANCE'
+ */
+const getOperateType = (target, type) => {
+  const targetMap = {
+    liquor: 'WINE',
+    points: 'POINTS',
+    balance: 'BALANCE'
+  }
+  const prefix = type === 'add' ? 'ADD' : 'SUB'
+  return `${prefix}_${targetMap[target]}`
+}
+
+const submitOp = async () => {
   const mod = Number(opAmount.value)
   if(!mod || mod <= 0) {
     uni.showToast({ title: '请输入有效的数量', icon: 'none' })
@@ -172,13 +218,30 @@ const submitOp = () => {
     return
   }
 
+  if (submitting.value) return
+  submitting.value = true
+
   uni.showLoading({ title: '处理中...' })
-  setTimeout(() => {
-    member.value[opTarget.value] = previewVal.value
+
+  try {
+    await memberOperate({
+      memberId: Number(memberId.value),
+      type: getOperateType(opTarget.value, opType.value),
+      value: mod
+    })
+
     uni.hideLoading()
     uni.showToast({ title: '操作成功', icon: 'success' })
     closeModal()
-  }, 600)
+
+    // 刷新会员数据以获取最新状态
+    await loadMember(memberId.value)
+  } catch (err) {
+    uni.hideLoading()
+    console.error('[memberOperate] error:', err)
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
