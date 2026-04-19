@@ -1,39 +1,49 @@
-package com.clubhub.service;
+package com.clubhub.staff.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.clubhub.dto.Result;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
+import com.clubhub.entity.Staff;
 import com.clubhub.enums.OperationType;
 import com.clubhub.mapper.MemberMapper;
 import com.clubhub.mapper.OperationLogMapper;
+import com.clubhub.mapper.StaffMapper;
+import com.clubhub.staff.request.MemberInfoUpdateRequest;
+import com.clubhub.staff.request.MemberOperateRequest;
+import com.clubhub.staff.request.MemberRegisterRequest;
+import com.clubhub.staff.request.MemberRemarkUpdateRequest;
+import com.clubhub.staff.request.StaffPasswordChangeRequest;
+import com.clubhub.staff.response.MemberDetailResponse;
+import com.clubhub.staff.response.MemberOperateResponse;
+import com.clubhub.staff.response.MemberSearchItemResponse;
+import com.clubhub.staff.service.StaffService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class MemberService {
+public class StaffServiceImpl implements StaffService {
 
+    private final StaffMapper staffMapper;
     private final MemberMapper memberMapper;
     private final OperationLogMapper operationLogMapper;
 
-    /**
-     * 新客开卡
-     */
-    public Result<?> register(Member member) {
-        // 手机号查重
+    @Override
+    public Result<?> registerMember(MemberRegisterRequest request) {
         Long count = memberMapper.selectCount(
-                new LambdaQueryWrapper<Member>().eq(Member::getPhone, member.getPhone()));
+                new LambdaQueryWrapper<Member>().eq(Member::getPhone, request.getPhone()));
         if (count > 0) {
             return Result.fail("该手机号已开卡，请勿重复开卡");
         }
+        Member member = new Member();
+        BeanUtils.copyProperties(request, member);
         if (member.getWine() == null) member.setWine(0);
         if (member.getPoints() == null) member.setPoints(0);
         if (member.getBalance() == null) member.setBalance(BigDecimal.ZERO);
@@ -42,9 +52,7 @@ public class MemberService {
         return Result.ok();
     }
 
-    /**
-     * 按手机号后四位搜索
-     */
+    @Override
     public Result<?> searchByPhoneTail(String tail, String role) {
         List<Member> list = memberMapper.selectList(
                 new LambdaQueryWrapper<Member>().likeLeft(Member::getPhone, tail));
@@ -53,71 +61,67 @@ public class MemberService {
             return Result.ok(List.of());
         }
 
-        // 检查尾号是否有重复
         boolean hasDuplicate = list.size() > 1;
 
-        List<Map<String, Object>> result = list.stream().map(m -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", m.getId());
-            map.put("name", m.getName());
-            map.put("wine", m.getWine());
-            map.put("points", m.getPoints());
-            map.put("balance", m.getBalance());
-            map.put("remark", m.getRemark());
+        List<MemberSearchItemResponse> result = list.stream().map(m -> {
+            MemberSearchItemResponse item = new MemberSearchItemResponse();
+            item.setId(m.getId());
+            item.setName(m.getName());
+            item.setWine(m.getWine());
+            item.setPoints(m.getPoints());
+            item.setBalance(m.getBalance());
+            item.setRemark(m.getRemark());
 
-            // 店东始终显示完整手机号；店员仅在尾号重复时显示完整手机号
             if ("owner".equals(role) || hasDuplicate) {
-                map.put("phone", m.getPhone());
+                item.setPhone(m.getPhone());
             } else {
-                map.put("phone", "****" + m.getPhone().substring(m.getPhone().length() - 4));
+                item.setPhone("****" + m.getPhone().substring(m.getPhone().length() - 4));
             }
-            return map;
+            return item;
         }).toList();
 
         return Result.ok(result);
     }
 
-    /**
-     * 获取会员详情
-     */
-    public Result<?> detail(Long id, String role) {
+    @Override
+    public Result<?> memberDetail(Long id, String role) {
         Member m = memberMapper.selectById(id);
         if (m == null) {
             return Result.fail("客户不存在");
         }
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", m.getId());
-        map.put("name", m.getName());
-        map.put("gender", m.getGender());
-        map.put("wine", m.getWine());
-        map.put("points", m.getPoints());
-        map.put("balance", m.getBalance());
-        map.put("remark", m.getRemark());
+        MemberDetailResponse detail = new MemberDetailResponse();
+        detail.setId(m.getId());
+        detail.setName(m.getName());
+        detail.setGender(m.getGender());
+        detail.setWine(m.getWine());
+        detail.setPoints(m.getPoints());
+        detail.setBalance(m.getBalance());
+        detail.setRemark(m.getRemark());
 
         if ("owner".equals(role)) {
-            map.put("phone", m.getPhone());
+            detail.setPhone(m.getPhone());
         } else {
-            // 店员查看详情时，检查是否有尾号重复
             String tail = m.getPhone().substring(m.getPhone().length() - 4);
             Long count = memberMapper.selectCount(
                     new LambdaQueryWrapper<Member>().likeLeft(Member::getPhone, tail));
             if (count > 1) {
-                map.put("phone", m.getPhone());
+                detail.setPhone(m.getPhone());
             } else {
-                map.put("phone", "****" + tail);
+                detail.setPhone("****" + tail);
             }
         }
 
-        return Result.ok(map);
+        return Result.ok(detail);
     }
 
-    /**
-     * 加减操作（积分/酒/储值）
-     */
+    @Override
     @Transactional
-    public Result<?> operate(Long memberId, OperationType type, BigDecimal value,
-                             Long staffId, String staffName) {
+    public Result<?> operate(MemberOperateRequest request, Long staffId) {
+        BigDecimal value = request.getValue();
+        OperationType type = request.getType();
+        Long memberId = request.getMemberId();
+
         if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             return Result.fail("操作值必须大于 0");
         }
@@ -176,10 +180,9 @@ public class MemberService {
 
         memberMapper.updateById(member);
 
-        // 记录操作日志
         OperationLog log = new OperationLog();
         log.setStaffId(staffId);
-        log.setStaffName(staffName);
+        log.setStaffName(getNameById(staffId));
         log.setMemberId(memberId);
         log.setMemberName(member.getName());
         log.setOperationType(type.getCode());
@@ -189,37 +192,33 @@ public class MemberService {
         log.setCreateTime(LocalDateTime.now());
         operationLogMapper.insert(log);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("before", beforeValue);
-        result.put("after", afterValue);
-        return Result.ok(result);
+        return Result.ok(new MemberOperateResponse(beforeValue, afterValue));
     }
 
-    /**
-     * 修改备注
-     */
-    public Result<?> updateRemark(Long id, String remark) {
-        if (memberMapper.selectById(id) == null) {
+    @Override
+    public Result<?> updateMemberRemark(MemberRemarkUpdateRequest request) {
+        if (memberMapper.selectById(request.getId()) == null) {
             return Result.fail("客户不存在");
         }
         Member member = new Member();
-        member.setId(id);
-        member.setRemark(remark);
+        member.setId(request.getId());
+        member.setRemark(request.getRemark());
         memberMapper.updateById(member);
         return Result.ok();
     }
 
-    /**
-     * 修改基本信息（姓名/性别/手机号）
-     * 仅传了的字段会被更新；手机号变更需查重
-     */
-    public Result<?> updateInfo(Long id, String name, String gender, String phone) {
-        Member exist = memberMapper.selectById(id);
+    @Override
+    public Result<?> updateMemberInfo(MemberInfoUpdateRequest request) {
+        Member exist = memberMapper.selectById(request.getId());
         if (exist == null) {
             return Result.fail("客户不存在");
         }
         Member update = new Member();
-        update.setId(id);
+        update.setId(request.getId());
+
+        String name = request.getName();
+        String gender = request.getGender();
+        String phone = request.getPhone();
 
         if (name != null && !name.isBlank()) {
             update.setName(name.trim());
@@ -234,7 +233,7 @@ public class MemberService {
             Long count = memberMapper.selectCount(
                     new LambdaQueryWrapper<Member>()
                             .eq(Member::getPhone, phone)
-                            .ne(Member::getId, id));
+                            .ne(Member::getId, request.getId()));
             if (count > 0) {
                 return Result.fail("该手机号已被其他会员使用");
             }
@@ -244,28 +243,34 @@ public class MemberService {
         return Result.ok();
     }
 
-    /**
-     * 获取所有会员（店东下载用）
-     */
-    public List<Member> listAll() {
-        return memberMapper.selectList(new LambdaQueryWrapper<Member>().orderByDesc(Member::getCreateTime));
+    @Override
+    public Result<?> changePassword(Long staffId, StaffPasswordChangeRequest request) {
+        String newPassword = request.getNewPassword();
+        if (newPassword == null || newPassword.length() < 6) {
+            return Result.fail("新密码至少 6 位");
+        }
+        Staff staff = staffMapper.selectById(staffId);
+        if (staff == null) {
+            return Result.fail("用户不存在");
+        }
+        if (!staff.getPassword().equals(request.getOldPassword())) {
+            return Result.fail("原密码错误");
+        }
+        Staff update = new Staff();
+        update.setId(staffId);
+        update.setPassword(newPassword);
+        staffMapper.updateById(update);
+        return Result.ok();
     }
 
-    /**
-     * 客户自助查看
-     */
-    public Result<?> customerView(String phone) {
-        Member member = memberMapper.selectOne(
-                new LambdaQueryWrapper<Member>().eq(Member::getPhone, phone));
-        if (member == null) {
-            return Result.fail("未找到会员信息");
-        }
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", member.getName());
-        map.put("wine", member.getWine());
-        map.put("points", member.getPoints());
-        map.put("balance", member.getBalance());
-        map.put("remark", member.getRemark());
-        return Result.ok(map);
+    @Override
+    public String getNameById(Long staffId) {
+        Staff staff = staffMapper.selectById(staffId);
+        return staff != null ? staff.getName() : "未知员工";
+    }
+
+    @Override
+    public Staff getById(Long staffId) {
+        return staffMapper.selectById(staffId);
     }
 }
