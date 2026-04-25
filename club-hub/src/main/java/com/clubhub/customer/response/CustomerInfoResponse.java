@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 @Data
 public class CustomerInfoResponse {
+    private Long id;
     private String name;
     private Integer wine;
     private Integer points;

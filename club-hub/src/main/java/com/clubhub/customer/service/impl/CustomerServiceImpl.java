@@ -23,10 +23,12 @@ public class CustomerServiceImpl implements CustomerService {
             return Result.fail("未找到会员信息");
         }
         CustomerInfoResponse resp = new CustomerInfoResponse();
+        resp.setId(member.getId());
         resp.setName(member.getName());
         resp.setWine(member.getWine());
         resp.setPoints(member.getPoints());
         resp.setBalance(member.getBalance());
-         return Result.ok(resp);
+        resp.setRemark(member.getRemark());
+        return Result.ok(resp);
     }
 }

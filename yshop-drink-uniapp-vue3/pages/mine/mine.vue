@@ -40,11 +40,11 @@
 						<image :src="isLogin ? member.avatar ? member.avatar : '/static/images/mine/default.png' : '/static/images/mine/default.png'"></image>
 					</view>
 					<view class="user-name">
-						<view v-if="isLogin" class="name-text text-truncate" @tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">
+						<view v-if="isLogin" class="name-text text-truncate">
 							<template v-if="member.name && member.name !== '微信用户'">
-								{{ member.name }}_{{ (member.phone || member.mobile || '****').slice(-4) }}
+								{{ member.name }}_{{ String(member.id || '').padStart(3, '0') }}
 							</template>
-							<template v-else>醉<text class="spade">♠</text>岛 Bar_{{ (member.phone || member.mobile || '****').slice(-4) }}</template>
+							<template v-else>醉<text class="spade">♠</text>岛 Bar_{{ String(member.id || '').padStart(3, '0') }}</template>
 						</view>
 						<view v-else class="name-text" @tap="login">醉<text class="spade">♠</text>岛 Bar用户</view>
 					</view>
@@ -72,19 +72,14 @@
 						<view class="divider"></view>
 						<view class="stat-item flex-1">
 							<view class="stat-label">积分</view>
-							<view class="stat-value">{{ isLogin ? (member.points || 0) : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? Number(member.points || 0).toFixed(2) : '*' }}</view>
 						</view>
 						<view class="divider"></view>
 						<view class="stat-item flex-1">
 							<view class="stat-label">储值余额</view>
-							<view class="stat-value">{{ isLogin ? (member.balance || '0') : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? Number(member.balance || 0).toFixed(2) : '*' }}</view>
 						</view>
-					</view>
-
-					<view class="remark-row" v-if="isLogin && (member.remark || member.mark)">
-						<view class="remark-label">备注</view>
-						<view class="remark-content">{{ member.remark || member.mark }}</view>
-					</view>
+					</view>					
 				</view>
 			</view>
 		</view>
@@ -394,25 +389,6 @@ const serv = (item) => {
 				width: 1px;
 				height: 40rpx;
 				background-color: #f0f0f0;
-			}
-		}
-
-		.remark-row {
-			background-color: #f9f9f9;
-			border-radius: 12rpx;
-			padding: 24rpx;
-			margin-top: 30rpx;
-			text-align: left;
-
-			.remark-label {
-				font-size: 24rpx;
-				color: #999999;
-				margin-bottom: 10rpx;
-			}
-			.remark-content {
-				font-size: 28rpx;
-				color: #333333;
-				line-height: 1.5;
 			}
 		}
 	}

@@ -792,8 +792,10 @@ onMounted(() => {
   }
   
   .remark-cell {
-    max-width: 60%;
+    max-width: none;
     text-align: right;
+    overflow: visible;
+    text-overflow: clip;
   }
   .table-actions {
     display: grid;
