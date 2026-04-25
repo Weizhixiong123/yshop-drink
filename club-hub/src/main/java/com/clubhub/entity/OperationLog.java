@@ -13,7 +13,7 @@ public class OperationLog {
     private Long id;
 
     /** 操作员工ID */
-    private Long staffId;
+    private String staffId;
 
     /** 操作员工姓名 */
     private String staffName;

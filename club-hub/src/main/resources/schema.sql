@@ -4,7 +4,7 @@ USE club_hub;
 
 -- 员工邀请表（店员）
 CREATE TABLE IF NOT EXISTS staff (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id          VARCHAR(32) PRIMARY KEY COMMENT '员工UUID',
     phone       VARCHAR(20)  NOT NULL UNIQUE COMMENT '手机号',
     name        VARCHAR(50)  NOT NULL COMMENT '姓名',
     role        VARCHAR(20)  NOT NULL DEFAULT 'staff' COMMENT '角色: staff=店员',
@@ -27,13 +27,15 @@ CREATE TABLE IF NOT EXISTS member (
     create_time DATETIME       DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted     TINYINT        NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0=正常, 1=已删除',
-    INDEX idx_phone_tail (phone)
+    INDEX idx_member_create_id (create_time, id),
+    INDEX idx_member_gender_create_id (gender, create_time, id),
+    INDEX idx_member_name_create_id (name, create_time, id)
 ) COMMENT '会员表';
 
 -- 操作日志表
 CREATE TABLE IF NOT EXISTS operation_log (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    staff_id        BIGINT       NOT NULL COMMENT '操作员工ID',
+    staff_id        VARCHAR(32)  NOT NULL COMMENT '操作员工ID',
     staff_name      VARCHAR(50)  NOT NULL COMMENT '操作员工姓名',
     member_id       BIGINT       NOT NULL COMMENT '客户ID',
     member_name     VARCHAR(50)  NOT NULL COMMENT '客户姓名',

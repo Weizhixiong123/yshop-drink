@@ -1,12 +1,10 @@
 <script setup>
 import { onHide,onLaunch,onShow } from '@dcloudio/uni-app'
-import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store/store'
 const main = useMainStore()
 import { isWeixin,parseQuery } from '@/utils/util'
 import cookie from '@/utils/cookie'
 import {
-  userAuthSession,
   wechatAuth
 } from '@/api/auth'
 import { APP_ID } from '@/config'
@@ -27,33 +25,13 @@ onShow(() => {
 	}
 	// #endif
 	// #ifdef MP-WEIXIN
-	wechatMiniLogin();
+	// 员工端不在启动时自动登录，登录页按钮负责走 /api/auth/staff/wx-login
 	// #endif
 })
 
 onHide(() => {
    console.log('App Hide')
 })
-
-
-
-const wechatMiniLogin = () => {
-	//this.$u.toast('登录中');
-	uni.login({
-		provider: 'weixin'
-	}).then(async (res) => {
-		let data = await userAuthSession({
-			code: res.code
-		});
-		if (data) {
-			main.SET_OPENID(data.openId)
-			if (data.hasOwnProperty('userInfo') && data.accessToken && data.accessToken != '') {
-				main.SET_MEMBER(data.userInfo);
-				main.SET_TOKEN(data.accessToken);
-			}
-		}
-	});
-}
 
 const getAuthUrl = (appId) => {
 	  // #ifdef H5

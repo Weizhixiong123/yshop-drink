@@ -29,7 +29,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         try {
             token = token.substring(7);
-            Long userId = jwtUtil.getUserId(token);
+            String userId = jwtUtil.getUserId(token);
             String role = jwtUtil.getRole(token);
 
             request.setAttribute("userId", userId);

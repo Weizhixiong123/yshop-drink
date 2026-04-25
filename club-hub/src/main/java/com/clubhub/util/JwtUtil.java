@@ -23,9 +23,9 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Long userId, String role) {
+    public String generateToken(String userId, String role) {
         return Jwts.builder()
-                .subject(String.valueOf(userId))
+                .subject(userId)
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
@@ -41,8 +41,8 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    public Long getUserId(String token) {
-        return Long.valueOf(parseToken(token).getSubject());
+    public String getUserId(String token) {
+        return parseToken(token).getSubject();
     }
 
     public String getRole(String token) {

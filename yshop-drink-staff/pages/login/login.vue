@@ -54,8 +54,10 @@
 import { ref } from 'vue'
 import { staffWxLogin } from '@/api/staffAuth'
 import cookie from '@/utils/cookie'
+import { STAFF_WX_LOGIN_MOCK } from '@/config'
 
 const loading = ref(false)
+const MOCK_PHONE_CODE = 'dev-mock-phone-code'
 
 /**
  * 登录成功统一处理
@@ -63,9 +65,11 @@ const loading = ref(false)
 const onLoginSuccess = (data) => {
   // 从返回数据中提取 token
   const token = data?.token || data?.accessToken || (typeof data === 'string' ? data : '')
-  if (token) {
-    cookie.set('accessToken', token)
+  if (!token) {
+    uni.showToast({ title: '登录失败：未返回登录凭证', icon: 'none' })
+    return
   }
+  cookie.set('accessToken', token)
 
   // 存储角色信息（如果返回了）
   if (data?.role) {
@@ -79,27 +83,7 @@ const onLoginSuccess = (data) => {
   }, 1000)
 }
 
-/**
- * 微信小程序：手机号授权回调
- * wx.getPhoneNumber 成功后拿到 code，发给后端换 token
- */
-const onGetPhoneNumber = async (e) => {
-  // 用户拒绝授权
-  if (e.detail.errMsg && e.detail.errMsg.indexOf('deny') > -1) {
-    uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
-    return
-  }
-  if (e.detail.errMsg && e.detail.errMsg.indexOf('fail') > -1) {
-    uni.showToast({ title: '获取手机号失败，请重试', icon: 'none' })
-    return
-  }
-
-  const code = e.detail.code
-  if (!code) {
-    uni.showToast({ title: '获取授权码失败', icon: 'none' })
-    return
-  }
-
+const loginWithPhoneCode = async (code) => {
   if (loading.value) return
   loading.value = true
 
@@ -108,11 +92,43 @@ const onGetPhoneNumber = async (e) => {
     onLoginSuccess(data)
   } catch (err) {
     console.error('[staffWxLogin] error:', err)
-    // 如果后端返回"该手机号未注册为员工"之类的错误
     // api.js 已自动 toast 错误
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * 微信小程序：手机号授权回调
+ * wx.getPhoneNumber 成功后拿到 code，发给后端换 token
+ */
+const onGetPhoneNumber = async (e) => {
+  const detail = e?.detail || {}
+  const errMsg = String(detail.errMsg || '')
+  console.log('[getPhoneNumber] detail:', detail)
+
+  const code = detail.code
+  if (code) {
+    await loginWithPhoneCode(code)
+    return
+  }
+
+  if (STAFF_WX_LOGIN_MOCK) {
+    uni.showToast({ title: '本地模拟登录中...', icon: 'none' })
+    await loginWithPhoneCode(MOCK_PHONE_CODE)
+    return
+  }
+
+  // 用户拒绝授权
+  if (errMsg && errMsg.indexOf('deny') > -1) {
+    uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
+    return
+  }
+  if (errMsg && errMsg.indexOf('fail') > -1) {
+    uni.showToast({ title: '获取手机号失败，请重试', icon: 'none' })
+    return
+  }
+  uni.showToast({ title: '获取授权码失败', icon: 'none' })
 }
 
 </script>

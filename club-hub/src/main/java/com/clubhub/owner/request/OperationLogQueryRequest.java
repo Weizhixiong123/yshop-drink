@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class OperationLogQueryRequest {
     private Long memberId;
-    private Long staffId;
+    private String staffId;
     private String operationType;
     private String startTime;
     private String endTime;

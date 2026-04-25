@@ -120,7 +120,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional
-    public Result<?> operate(MemberOperateRequest request, Long staffId) {
+    public Result<?> operate(MemberOperateRequest request, String staffId) {
         BigDecimal value = request.getValue();
         OperationType type = request.getType();
         Long memberId = request.getMemberId();
@@ -247,8 +247,8 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public String getNameById(Long staffId) {
-        if (Long.valueOf(0L).equals(staffId)) {
+    public String getNameById(String staffId) {
+        if ("owner".equals(staffId)) {
             return ownerName == null || ownerName.isBlank() ? "店东" : ownerName.trim();
         }
         Staff staff = staffMapper.selectById(staffId);
@@ -256,7 +256,7 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Staff getById(Long staffId) {
+    public Staff getById(String staffId) {
         return staffMapper.selectById(staffId);
     }
 }

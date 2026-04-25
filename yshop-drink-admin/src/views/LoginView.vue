@@ -6,14 +6,19 @@ import { authStore } from '../stores/auth.js'
 const router = useRouter()
 const loginForm = ref({ username: '', password: '' })
 const errorMsg = ref('')
+const submitting = ref(false)
 
-const handleLogin = () => {
+const handleLogin = async () => {
   errorMsg.value = ''
-  const success = authStore.login(loginForm.value.username, loginForm.value.password)
-  if (success) {
+  submitting.value = true
+
+  try {
+    await authStore.login(loginForm.value.username, loginForm.value.password)
     router.push('/dashboard/members')
-  } else {
-    errorMsg.value = '账号或密码错误（测试：boss / boss）'
+  } catch (error) {
+    errorMsg.value = error?.message || '账号或密码错误'
+  } finally {
+    submitting.value = false
   }
 }
 </script>
@@ -52,7 +57,7 @@ const handleLogin = () => {
           <input
             v-model="loginForm.username"
             type="text"
-            placeholder="账号 (boss)"
+            placeholder="账号 (默认: admin)"
             class="input-field"
             required
           />
@@ -66,13 +71,15 @@ const handleLogin = () => {
           <input
             v-model="loginForm.password"
             type="password"
-            placeholder="密码 (boss)"
+            placeholder="密码 (默认: admin123admin)"
             class="input-field"
             required
           />
         </div>
         <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
-        <button type="submit" class="btn-solid login-btn">立即进入后台</button>
+        <button type="submit" class="btn-solid login-btn" :disabled="submitting">
+          {{ submitting ? '登录中...' : '立即进入后台' }}
+        </button>
       </form>
     </div>
   </div>
@@ -269,6 +276,11 @@ const handleLogin = () => {
   width: 100%;
   padding: 16px;
   font-size: 18px;
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* ====================

@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
             return Result.fail("店东账号或密码错误");
         }
 
-        String token = jwtUtil.generateToken(0L, "owner");
+        String token = jwtUtil.generateToken("owner", "owner");
         return Result.ok(new StaffLoginResponse(token, trimToNull(ownerName) == null ? "店东" : ownerName.trim(), "owner"));
     }
 
@@ -107,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
         if (member == null) {
             return Result.fail("未找到会员信息");
         }
-        String token = jwtUtil.generateToken(Long.valueOf(phone.hashCode() & 0x7fffffffL), "customer");
+        String token = jwtUtil.generateToken(String.valueOf(phone.hashCode() & 0x7fffffffL), "customer");
         return Result.ok(new CustomerLoginResponse(token, phone));
     }
 

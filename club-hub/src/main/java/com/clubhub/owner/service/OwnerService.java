@@ -3,8 +3,10 @@ package com.clubhub.owner.service;
 import com.clubhub.dto.Result;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
+import com.clubhub.owner.request.MemberQueryRequest;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
+import com.clubhub.owner.request.StaffUpdateRequest;
 
 import java.util.List;
 
@@ -16,9 +18,9 @@ public interface OwnerService {
 
     Result<?> listStaff();
 
-    Result<?> updateStaffStatus(Long id, Integer status);
+    Result<?> updateStaff(StaffUpdateRequest request);
 
-    Result<?> deleteStaff(Long id);
+    Result<?> deleteStaff(String id);
 
     // ========== 操作日志 ==========
 
@@ -31,6 +33,8 @@ public interface OwnerService {
     Result<?> todayStat();
 
     // ========== 客户资料 ==========
+
+    Result<?> listMembers(MemberQueryRequest query);
 
     List<Member> listAllMembers();
 }

@@ -4,7 +4,7 @@ import api from './api'
  * 基本信息 
  */
 export function userGetUserInfo(data) {
-  return api.get('/member/user/get-info', data, { login: true })
+  return api.get('/api/customer/info', data, { login: true })
 }
 
 /**

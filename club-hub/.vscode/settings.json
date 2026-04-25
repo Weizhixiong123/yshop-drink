@@ -1,0 +1,6 @@
+{
+  "editor.codeLens": true,
+  "editor.gotoLocation.alternativeDefinitionCommand": "editor.action.goToImplementation",
+  "java.implementationCodeLens": "all",
+  "editor.gotoLocation.multipleImplementations": "goto"
+}

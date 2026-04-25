@@ -33,7 +33,6 @@ const handleLogout = () => {
         </span>
         <div class="text">
           <span class="title">会员档案</span>
-          <span class="subtitle">VIP Database</span>
         </div>
       </li>
       <li
@@ -43,7 +42,6 @@ const handleLogout = () => {
         <span class="icon">查</span>
         <div class="text">
           <span class="title">操作审计</span>
-          <span class="subtitle">Ledger Logs</span>
         </div>
       </li>
       <li
@@ -178,13 +176,6 @@ const handleLogout = () => {
   font-weight: bold;
 }
 
-.nav-links li .subtitle {
-  font-size: 11px;
-  text-transform: uppercase;
-  margin-top: 2px;
-  opacity: 0.8;
-}
-
 .logout-btn {
   margin: 30px;
   padding: 15px;
@@ -276,8 +267,5 @@ const handleLogout = () => {
     font-size: 12px;
   }
 
-  .nav-links li .subtitle {
-    display: none; /* 移动端空间有限，隐藏英文小字 */
-  }
 }
 </style>

@@ -4,9 +4,16 @@ import com.clubhub.dto.Result;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
 import com.clubhub.enums.OperationType;
+import com.clubhub.owner.request.MemberQueryRequest;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
+import com.clubhub.owner.request.StaffUpdateRequest;
 import com.clubhub.owner.service.OwnerService;
+import com.clubhub.staff.request.MemberInfoUpdateRequest;
+import com.clubhub.staff.request.MemberOperateRequest;
+import com.clubhub.staff.request.MemberRemarkUpdateRequest;
+import com.clubhub.staff.service.StaffService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +33,7 @@ import java.util.List;
 public class OwnerController {
 
     private final OwnerService ownerService;
+    private final StaffService staffService;
 
     // ========== 员工管理 ==========
 
@@ -39,13 +47,13 @@ public class OwnerController {
         return ownerService.listStaff();
     }
 
-    @PutMapping("/staff/status")
-    public Result<?> updateStaffStatus(@RequestParam Long id, @RequestParam Integer status) {
-        return ownerService.updateStaffStatus(id, status);
+    @PutMapping("/staff/update")
+    public Result<?> updateStaff(@RequestBody @Valid StaffUpdateRequest request) {
+        return ownerService.updateStaff(request);
     }
 
     @DeleteMapping("/staff/{id}")
-    public Result<?> deleteStaff(@PathVariable Long id) {
+    public Result<?> deleteStaff(@PathVariable String id) {
         return ownerService.deleteStaff(id);
     }
 
@@ -66,6 +74,29 @@ public class OwnerController {
     }
 
     // ========== 客户资料下载 ==========
+
+    @GetMapping("/member/list")
+    public Result<?> memberList(MemberQueryRequest query) {
+        if (query.getPageNum() == null) query.setPageNum(1L);
+        return ownerService.listMembers(query);
+    }
+
+    @PutMapping("/member/info")
+    public Result<?> updateMemberInfo(@RequestBody @Valid MemberInfoUpdateRequest request) {
+        return staffService.updateMemberInfo(request);
+    }
+
+    @PutMapping("/member/remark")
+    public Result<?> updateMemberRemark(@RequestBody @Valid MemberRemarkUpdateRequest request) {
+        return staffService.updateMemberRemark(request);
+    }
+
+    @PostMapping("/member/operate")
+    public Result<?> operateMember(@RequestBody @Valid MemberOperateRequest request,
+                                   HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        return staffService.operate(request, staffId);
+    }
 
     @GetMapping("/member/export")
     public void exportMembers(HttpServletResponse response) throws IOException {

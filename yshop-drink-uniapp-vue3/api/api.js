@@ -59,7 +59,7 @@ function uniRequest(url, data, options) {
           return
         }
 
-        if (resData.code != 0) {
+        if (resData.code != 0 && resData.code != 200) {
           uni.showToast({ title: resData.msg, icon: 'none', duration: 2000 })
           reject({ data: resData, res })
           return

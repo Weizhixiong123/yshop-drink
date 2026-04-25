@@ -9,17 +9,10 @@
 				<image class="popup-logo" src="/static/images/login_bg.jpg" mode="aspectFill"></image>
 				<view class="popup-title">欢迎加入 醉<text class="spade">♠</text>岛 Bar</view>
 
-				<!-- #ifdef MP-WEIXIN -->
-				<button class="phone-login-btn" open-type="getPhoneNumber" @getphonenumber="loginForWechatMini">
-					手机号快捷登录
+				<!-- 开发测试阶段统一使用 tap 触发 -->
+				<button class="phone-login-btn" @tap="loginForWechatMini">
+					手机号快捷登录 (开发测试)
 				</button>
-				<!-- #endif -->
-
-				<!-- #ifndef MP-WEIXIN -->
-				<button class="phone-login-btn" @tap="showManualLogin">
-					手机号快捷登录
-				</button>
-				<!-- #endif -->
 
 				<view class="popup-hint" @tap="onChange">
 					<view class="custom-radio" :class="{ 'is-checked': isChecked }">
@@ -47,7 +40,12 @@
 						<image :src="isLogin ? member.avatar ? member.avatar : '/static/images/mine/default.png' : '/static/images/mine/default.png'"></image>
 					</view>
 					<view class="user-name">
-						<view v-if="isLogin" class="name-text text-truncate" @tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">{{ member.nickname }}</view>
+						<view v-if="isLogin" class="name-text text-truncate" @tap="serv({type:'pages',pages:'/pages/components/pages/mine/userinfo'})">
+							<template v-if="member.name && member.name !== '微信用户'">
+								{{ member.name }}_{{ (member.phone || member.mobile || '****').slice(-4) }}
+							</template>
+							<template v-else>醉<text class="spade">♠</text>岛 Bar_{{ (member.phone || member.mobile || '****').slice(-4) }}</template>
+						</view>
 						<view v-else class="name-text" @tap="login">醉<text class="spade">♠</text>岛 Bar用户</view>
 					</view>
 				</view>
@@ -58,8 +56,10 @@
 				<view class="white-card">
 					<view class="card-header d-flex justify-content-between align-items-center">
 						<view class="welcome">
-							<view class="title">欢迎加入醉<text class="spade">♠</text>岛 Bar</view>
-							<view class="subtitle">登录后查看账户信息</view>
+							<view class="title" v-if="!isLogin">欢迎加入醉<text class="spade">♠</text>岛 Bar</view>
+							<view class="title" v-else>我的资产</view>
+							
+							<view class="subtitle" v-if="!isLogin">登录后查看账户信息</view>
 						</view>
 						<view class="login-btn" @tap="login" v-if="!isLogin">注册/登录</view>
 					</view>
@@ -67,23 +67,23 @@
 					<view class="stats-row d-flex align-items-center">
 						<view class="stat-item flex-1">
 							<view class="stat-label">存酒</view>
-							<view class="stat-value">{{ isLogin ? (member.wineCount || 0) : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? (member.wine || 0) : '*' }}</view>
 						</view>
 						<view class="divider"></view>
 						<view class="stat-item flex-1">
 							<view class="stat-label">积分</view>
-							<view class="stat-value">{{ isLogin ? (member.integral || 0) : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? (member.points || 0) : '*' }}</view>
 						</view>
 						<view class="divider"></view>
 						<view class="stat-item flex-1">
 							<view class="stat-label">储值余额</view>
-							<view class="stat-value">{{ isLogin ? (member.nowMoney || '0') : '*' }}</view>
+							<view class="stat-value">{{ isLogin ? (member.balance || '0') : '*' }}</view>
 						</view>
 					</view>
 
-					<view class="remark-row" v-if="isLogin">
+					<view class="remark-row" v-if="isLogin && (member.remark || member.mark)">
 						<view class="remark-label">备注</view>
-						<view class="remark-content">{{ member.remark || member.mark || '暂无备注信息' }}</view>
+						<view class="remark-content">{{ member.remark || member.mark }}</view>
 					</view>
 				</view>
 			</view>
@@ -104,8 +104,7 @@ import {
   userGetUserInfo
 } from '@/api/user'
 import {
-  userAuthSession,
-  userLoginForWechatMini
+  customerLogin
 } from '@/api/auth'
 
 const main = useMainStore()
@@ -115,7 +114,6 @@ const title = ref('个人中心')
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight
 const showPopup = ref(false)
 const isChecked = ref(false)
-const openid = ref(main.openid)
 const uToast = ref()
 
 const growthValue = computed(() => { 
@@ -129,28 +127,9 @@ const growthValue = computed(() => {
 
 onShow(() => {
 	getUserInfo();
-	// #ifdef MP-WEIXIN
-	if(!openid.value){
-		wechatMiniLogin();
-	}
-	// #endif
 })
 
-const wechatMiniLogin = () => {
-	uni.login({
-		provider: 'weixin'
-	}).then(async (res) => {
-		let data = await userAuthSession({
-			code: res.code
-		});
-		if (data) {
-			main.SET_OPENID(data.openId)
-			openid.value = data.openId
-		}
-	});
-}
-
-const loginForWechatMini = async (e) => {
+const loginForWechatMini = async () => {
 	if(!isChecked.value){
 		uToast.value.show({
 			message: '请先勾选同意用户协议',
@@ -158,30 +137,34 @@ const loginForWechatMini = async (e) => {
 		});
 		return
 	}
-	if (e.detail.encryptedData && e.detail.iv) {
-		let data = await userLoginForWechatMini({
-			encryptedData: e.detail.encryptedData,
-			iv: e.detail.iv,
-			openid: openid.value
-		});
+	// 开发阶段：使用默认手机号登录
+	const code = "17836175977"; // 替换为默认测试手机号
+	console.log("准备调用 customerLogin, 手机号:", code);
+	try {
+		let data = await customerLogin({ phone: code });
 		if (data) {
+			// 先用 data 里的信息做个保底，让 isLogin 能变成 true
+			main.SET_MEMBER(data.userInfo || { phone: code });
+			main.SET_TOKEN(data.accessToken || data.token || '');
+			
 			uni.setStorage({
 				key: 'userinfo',
-				data: data.userInfo
+				data: data.userInfo || { phone: code }
 			});
 			uni.setStorage({
 				key: 'accessToken',
-				data: data.accessToken
+				data: data.accessToken || data.token || ''
 			});
-			main.SET_MEMBER(data.userInfo);
-			main.SET_TOKEN(data.accessToken);
+			
 			uToast.value.show({
 				message: '登录成功',
 				type: 'success'
 			});
-            getUserInfo();
+			await getUserInfo();
 			closePopup();
 		}
+	} catch (err) {
+		console.error('登录失败', err);
 	}
 }
 
@@ -201,10 +184,25 @@ const onChange = () => {
 }
 
 const getUserInfo = async() => {
-	if (isLogin.value) {
-		let data = await userGetUserInfo();
-		if (data) {
-			main.SET_MEMBER(data);
+	// 只要 store 中有 token 或者缓存中有 token 即可请求用户信息
+	const token = main.token || uni.getStorageSync('accessToken');
+	if (token) {
+		// 尝试从 store 或缓存中获取 phone
+		const userInfo = main.member && main.member.phone ? main.member : uni.getStorageSync('userinfo') || {};
+		const phone = userInfo.phone || userInfo.mobile;
+		if (phone) {
+			let data = await userGetUserInfo({ phone: phone });
+			if (data) {
+				// 保留原本的 phone 字段，防止新接口不返回 phone 导致下次查询失败
+				data.phone = phone;
+				main.SET_MEMBER(data);
+				uni.setStorage({
+					key: 'userinfo',
+					data: data
+				});
+			}
+		} else {
+			console.log('未获取到手机号，跳过查询 info');
 		}
 	}
 }

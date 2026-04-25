@@ -27,7 +27,7 @@ public interface StaffService {
     /**
      * 积分/存酒/储值加减操作
      */
-    Result<?> operate(MemberOperateRequest request, Long staffId);
+    Result<?> operate(MemberOperateRequest request, String staffId);
 
     /**
      * 修改备注
@@ -42,10 +42,10 @@ public interface StaffService {
     /**
      * 根据ID获取员工姓名
      */
-    String getNameById(Long staffId);
+    String getNameById(String staffId);
 
     /**
      * 根据ID获取员工
      */
-    Staff getById(Long staffId);
+    Staff getById(String staffId);
 }

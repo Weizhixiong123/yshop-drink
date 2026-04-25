@@ -50,7 +50,7 @@ public class StaffController {
     @PostMapping("/member/operate")
     public Result<?> operate(@RequestBody @Valid MemberOperateRequest request,
                              HttpServletRequest httpRequest) {
-        Long staffId = (Long) httpRequest.getAttribute("userId");
+        String staffId = (String) httpRequest.getAttribute("userId");
         return staffService.operate(request, staffId);
     }
 

@@ -15,17 +15,10 @@
 				<image class="popup-logo" src="/static/images/login_bg.jpg" mode="aspectFill"></image>
 				<view class="popup-title">欢迎加入 醉<text class="spade">♠</text>岛 Bar</view>
 
-				<!-- #ifdef MP-WEIXIN -->
-				<button class="phone-login-btn" open-type="getPhoneNumber" @getphonenumber="loginForWechatMini">
-					手机号快捷登录
+				<!-- 开发测试阶段统一使用 tap 触发 -->
+				<button class="phone-login-btn" @tap="loginForWechatMini">
+					手机号快捷登录 (开发测试)
 				</button>
-				<!-- #endif -->
-
-				<!-- #ifndef MP-WEIXIN -->
-				<button class="phone-login-btn" @tap="showManualLogin">
-					手机号快捷登录
-				</button>
-				<!-- #endif -->
 
 				<view class="popup-hint" @tap="onChange">
 					<view class="custom-radio" :class="{ 'is-checked': isChecked }">
@@ -51,45 +44,16 @@ import {
 import { onLoad,onShow } from '@dcloudio/uni-app'
 import { useMainStore } from '@/store/store'
 import {
-  userAuthSession,
-  userLoginForWechatMini,
-  smsSend,
-  userLogin
+  customerLogin
 } from '@/api/auth'
 import * as util  from '@/utils/util'
 const main = useMainStore()
 const title = ref('登录')
 const isChecked = ref(false)
-const openid = ref(main.openid)
 const uToast = ref()
 const showPopup = ref(true)
 
-onShow(() => {
-   
-	// #ifdef MP-WEIXIN
-	if(!openid.value){
-		wechatMiniLogin();
-	}
-	
-	// #endif
-})
-
-const wechatMiniLogin = () => {
-	uni.login({
-		provider: 'weixin'
-	}).then(async (res) => {
-		let data = await userAuthSession({
-			code: res.code
-		});
-		if (data) {
-			console.log('data.openId001:',data.openId)
-			main.SET_OPENID(data.openId)
-			openid.value = data.openId
-		}
-	});
-}
-
-const loginForWechatMini = async (e) => {
+const loginForWechatMini = async () => {
 	if(!isChecked.value){
 		uToast.value.show({
 			message: '请先勾选同意用户协议',
@@ -97,12 +61,11 @@ const loginForWechatMini = async (e) => {
 		});
 		return
 	}
-	if (e.detail.encryptedData && e.detail.iv) {
-		let data = await userLoginForWechatMini({
-			encryptedData: e.detail.encryptedData,
-			iv: e.detail.iv,
-			openid: openid.value
-		});
+	// 开发阶段：使用默认手机号登录
+	const code = "17836175977"; // 替换为默认测试手机号
+	console.log("准备调用 customerLogin, 手机号:", code);
+	try {
+		let data = await customerLogin({ phone: code });
 		if (data) {
 			uni.setStorage({
 				key: 'userinfo',
@@ -122,6 +85,8 @@ const loginForWechatMini = async (e) => {
 				uni.navigateBack();
 			}, 1500);
 		}
+	} catch (err) {
+		console.error('登录失败', err);
 	}
 }
 
