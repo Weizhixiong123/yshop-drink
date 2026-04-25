@@ -93,7 +93,7 @@ import {
 } from 'vue'
 import { useMainStore } from '@/store/store'
 import { storeToRefs } from 'pinia'
-import { onLoad,onShow} from '@dcloudio/uni-app'
+import { onShow,onHide,onUnload} from '@dcloudio/uni-app'
 import { formatDateTime,kmUnit } from '@/utils/util'
 import {
   userGetUserInfo
@@ -101,6 +101,7 @@ import {
 import {
   customerLogin
 } from '@/api/auth'
+import { connectCustomerSocket, disconnectCustomerSocket, refreshCustomerInfo } from '@/utils/customerSocket'
 
 const main = useMainStore()
 const { member,isLogin } = storeToRefs(main)
@@ -121,7 +122,16 @@ const growthValue = computed(() => {
 })
 
 onShow(() => {
+	connectCustomerSocket();
 	getUserInfo();
+})
+
+onHide(() => {
+	disconnectCustomerSocket();
+})
+
+onUnload(() => {
+	disconnectCustomerSocket();
 })
 
 const loginForWechatMini = async () => {
@@ -138,24 +148,27 @@ const loginForWechatMini = async () => {
 	try {
 		let data = await customerLogin({ phone: code });
 		if (data) {
+			const token = data.token || data.accessToken || ''
+			const userInfo = data.userInfo || { phone: data.phone || code }
 			// 先用 data 里的信息做个保底，让 isLogin 能变成 true
-			main.SET_MEMBER(data.userInfo || { phone: code });
-			main.SET_TOKEN(data.accessToken || data.token || '');
+			main.SET_MEMBER(userInfo);
+			main.SET_TOKEN(token);
 			
 			uni.setStorage({
 				key: 'userinfo',
-				data: data.userInfo || { phone: code }
+				data: userInfo
 			});
 			uni.setStorage({
 				key: 'accessToken',
-				data: data.accessToken || data.token || ''
+				data: token
 			});
+			connectCustomerSocket();
 			
 			uToast.value.show({
 				message: '登录成功',
 				type: 'success'
 			});
-			await getUserInfo();
+			await refreshCustomerInfo();
 			closePopup();
 		}
 	} catch (err) {

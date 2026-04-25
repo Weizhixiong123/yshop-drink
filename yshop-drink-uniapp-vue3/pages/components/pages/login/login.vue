@@ -46,6 +46,7 @@ import { useMainStore } from '@/store/store'
 import {
   customerLogin
 } from '@/api/auth'
+import { refreshCustomerInfo } from '@/utils/customerSocket'
 import * as util  from '@/utils/util'
 const main = useMainStore()
 const title = ref('登录')
@@ -67,16 +68,19 @@ const loginForWechatMini = async () => {
 	try {
 		let data = await customerLogin({ phone: code });
 		if (data) {
+			const token = data.token || data.accessToken || ''
+			const userInfo = data.userInfo || { phone: data.phone || code }
 			uni.setStorage({
 				key: 'userinfo',
-				data: data.userInfo
+				data: userInfo
 			});
 			uni.setStorage({
 				key: 'accessToken',
-				data: data.accessToken
+				data: token
 			});
-			main.SET_MEMBER(data.userInfo);
-			main.SET_TOKEN(data.accessToken);
+			main.SET_MEMBER(userInfo);
+			main.SET_TOKEN(token);
+			refreshCustomerInfo();
 			uToast.value.show({
 				message: '登录成功',
 				type: 'success'

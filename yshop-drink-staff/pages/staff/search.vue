@@ -58,13 +58,33 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { onHide, onLoad, onShow, onUnload } from '@dcloudio/uni-app'
 import { memberSearch } from '@/api/staff'
+import { connectStaffSocket } from '@/utils/staffSocket'
 
 const keyword = ref('')
 const hasSearched = ref(false)
 const results = ref([])
+const pageVisible = ref(false)
 
 const displayResults = computed(() => results.value)
+
+onLoad(() => {
+  uni.$on('MEMBER_DATA_UPDATE', onMemberDataUpdate)
+})
+
+onShow(() => {
+  pageVisible.value = true
+  connectStaffSocket()
+})
+
+onHide(() => {
+  pageVisible.value = false
+})
+
+onUnload(() => {
+  uni.$off('MEMBER_DATA_UPDATE', onMemberDataUpdate)
+})
 
 const getMaskedPhone = (phone) => {
   if (!phone) return '****'
@@ -74,14 +94,16 @@ const getMaskedPhone = (phone) => {
   return `****${phone.slice(-4)}`
 }
 
-const doSearch = async () => {
+const doSearch = async (silent = false) => {
   if (!keyword.value) {
     uni.showToast({ title: '请输入搜索词', icon: 'none' })
     return
   }
   
   hasSearched.value = true;
-  uni.showLoading({ title: '搜索中...' })
+  if (!silent) {
+    uni.showLoading({ title: '搜索中...' })
+  }
   
   try {
     const data = await memberSearch(keyword.value)
@@ -99,7 +121,19 @@ const doSearch = async () => {
     console.error('[memberSearch] error:', err)
     results.value = []
   } finally {
-    uni.hideLoading()
+    if (!silent) {
+      uni.hideLoading()
+    }
+  }
+}
+
+const onMemberDataUpdate = (message) => {
+  if (!pageVisible.value) {
+    return
+  }
+  const existsInCurrentResult = results.value.some(item => Number(item.id) === Number(message.memberId))
+  if (existsInCurrentResult) {
+    doSearch(true)
   }
 }
 

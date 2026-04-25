@@ -95,8 +95,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow, onUnload } from '@dcloudio/uni-app'
 import { memberDetail, memberOperate, memberUpdateRemark } from '@/api/staff'
+import { connectStaffSocket } from '@/utils/staffSocket'
 
 const member = ref(null)
 const memberId = ref(null)
@@ -129,6 +130,7 @@ const loadMember = async (id) => {
 }
 
 onLoad((options) => {
+  uni.$on('MEMBER_DATA_UPDATE', onMemberDataUpdate)
   if (options.id) {
     memberId.value = options.id
     loadMember(options.id)
@@ -143,6 +145,21 @@ onLoad((options) => {
     }
   }
 })
+
+onShow(() => {
+  connectStaffSocket()
+})
+
+onUnload(() => {
+  uni.$off('MEMBER_DATA_UPDATE', onMemberDataUpdate)
+})
+
+const onMemberDataUpdate = (message) => {
+  if (!memberId.value || Number(message.memberId) !== Number(memberId.value)) {
+    return
+  }
+  loadMember(memberId.value)
+}
 
 const getDisplayPhone = () => {
     return member.value?.phone || '未知'

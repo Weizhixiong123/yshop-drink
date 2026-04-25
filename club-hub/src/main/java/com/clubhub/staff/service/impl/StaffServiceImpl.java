@@ -17,6 +17,8 @@ import com.clubhub.staff.response.MemberDetailResponse;
 import com.clubhub.staff.response.MemberOperateResponse;
 import com.clubhub.staff.response.MemberSearchItemResponse;
 import com.clubhub.staff.service.StaffService;
+import com.clubhub.websocket.StaffDataUpdateNotifier;
+import com.clubhub.websocket.UserDataUpdateNotifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +36,8 @@ public class StaffServiceImpl implements StaffService {
     private final StaffMapper staffMapper;
     private final MemberMapper memberMapper;
     private final OperationLogMapper operationLogMapper;
+    private final UserDataUpdateNotifier userDataUpdateNotifier;
+    private final StaffDataUpdateNotifier staffDataUpdateNotifier;
 
     @Value("${owner.account.name:店东}")
     private String ownerName;
@@ -195,6 +199,16 @@ public class StaffServiceImpl implements StaffService {
         log.setCreateTime(LocalDateTime.now());
         operationLogMapper.insert(log);
 
+        if (type == OperationType.ADD_POINTS
+                || type == OperationType.SUB_POINTS
+                || type == OperationType.ADD_WINE
+                || type == OperationType.SUB_WINE
+                || type == OperationType.ADD_BALANCE
+                || type == OperationType.SUB_BALANCE) {
+            userDataUpdateNotifier.notifyAfterCommit(memberId);
+            staffDataUpdateNotifier.notifyAfterCommit(memberId);
+        }
+
         return Result.ok(new MemberOperateResponse(beforeValue, afterValue));
     }
 
@@ -207,6 +221,8 @@ public class StaffServiceImpl implements StaffService {
         member.setId(request.getId());
         member.setRemark(request.getRemark());
         memberMapper.updateById(member);
+        userDataUpdateNotifier.notifyAfterCommit(request.getId());
+        staffDataUpdateNotifier.notifyAfterCommit(request.getId());
         return Result.ok();
     }
 
@@ -243,6 +259,8 @@ public class StaffServiceImpl implements StaffService {
             update.setPhone(phone);
         }
         memberMapper.updateById(update);
+        userDataUpdateNotifier.notifyAfterCommit(request.getId());
+        staffDataUpdateNotifier.notifyAfterCommit(request.getId());
         return Result.ok();
     }
 

@@ -107,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
         if (member == null) {
             return Result.fail("未找到会员信息");
         }
-        String token = jwtUtil.generateToken(String.valueOf(phone.hashCode() & 0x7fffffffL), "customer");
+        String token = jwtUtil.generateToken(String.valueOf(member.getId()), "customer");
         return Result.ok(new CustomerLoginResponse(token, phone));
     }
 
