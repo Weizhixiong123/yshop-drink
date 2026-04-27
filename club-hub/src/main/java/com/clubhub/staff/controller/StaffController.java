@@ -27,12 +27,15 @@ public class StaffController {
     }
 
     /**
-     * 按手机号后四位搜索
+     * 按会员ID、姓名、手机号尾号搜索
      */
     @GetMapping("/member/search")
-    public Result<?> search(@RequestParam String tail, HttpServletRequest request) {
+    public Result<?> search(@RequestParam(required = false) String keyword,
+                            @RequestParam(required = false) String tail,
+                            @RequestParam(required = false) Integer limit,
+                            HttpServletRequest request) {
         String role = (String) request.getAttribute("role");
-        return staffService.searchByPhoneTail(tail, role);
+        return staffService.searchMembers(keyword, tail, limit, role);
     }
 
     /**

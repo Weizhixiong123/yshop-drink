@@ -60,15 +60,42 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Result<?> searchByPhoneTail(String tail, String role) {
+    public Result<?> searchMembers(String keyword, String tail, Integer limit, String role) {
+        boolean usingTail = (keyword == null || keyword.isBlank()) && tail != null && !tail.isBlank();
+        String query = normalizeSearchKeyword(keyword, tail);
+        if (query == null) {
+            return Result.fail("请输入搜索关键词");
+        }
+
+        boolean phoneTailSearch = query.matches("\\d+");
+        if (usingTail && !phoneTailSearch) {
+            return Result.fail("手机号尾号只能输入数字");
+        }
+        if (phoneTailSearch && query.length() > 11) {
+            return Result.fail("搜索数字不能超过 11 位");
+        }
+
+        Long memberId = parseMemberId(query);
+        int searchLimit = normalizeSearchLimit(limit);
+
         List<Member> list = memberMapper.selectList(
-                new LambdaQueryWrapper<Member>().likeLeft(Member::getPhone, tail));
+                new LambdaQueryWrapper<Member>()
+                        .and(wrapper -> {
+                            if (memberId != null) {
+                                wrapper.eq(Member::getId, memberId).or();
+                            }
+                            wrapper.like(Member::getName, query)
+                                    .or()
+                                    .likeLeft(Member::getPhone, query);
+                        })
+                        .orderByDesc(Member::getCreateTime, Member::getId)
+                        .last("LIMIT " + searchLimit));
 
         if (list.isEmpty()) {
             return Result.ok(List.of());
         }
 
-        boolean hasDuplicate = list.size() > 1;
+        boolean shouldShowFullPhone = "owner".equals(role) || (phoneTailSearch && hasDuplicatePhoneTail(list, query));
 
         List<MemberSearchItemResponse> result = list.stream().map(m -> {
             MemberSearchItemResponse item = new MemberSearchItemResponse();
@@ -79,15 +106,53 @@ public class StaffServiceImpl implements StaffService {
             item.setBalance(m.getBalance());
             item.setRemark(m.getRemark());
 
-            if ("owner".equals(role) || hasDuplicate) {
-                item.setPhone(m.getPhone());
-            } else {
-                item.setPhone("****" + m.getPhone().substring(m.getPhone().length() - 4));
-            }
+            item.setPhone(shouldShowFullPhone ? m.getPhone() : maskPhone(m.getPhone()));
             return item;
         }).toList();
 
         return Result.ok(result);
+    }
+
+    private String normalizeSearchKeyword(String keyword, String tail) {
+        if (keyword != null && !keyword.isBlank()) {
+            return keyword.trim();
+        }
+        if (tail != null && !tail.isBlank()) {
+            return tail.trim();
+        }
+        return null;
+    }
+
+    private int normalizeSearchLimit(Integer limit) {
+        if (limit == null) {
+            return 20;
+        }
+        return Math.min(Math.max(limit, 1), 50);
+    }
+
+    private boolean hasDuplicatePhoneTail(List<Member> list, String tail) {
+        long count = list.stream()
+                .filter(member -> member.getPhone() != null && member.getPhone().endsWith(tail))
+                .count();
+        return count > 1;
+    }
+
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() <= 4) {
+            return phone;
+        }
+        return "****" + phone.substring(phone.length() - 4);
+    }
+
+    private Long parseMemberId(String keyword) {
+        if (!keyword.matches("\\d+")) {
+            return null;
+        }
+        try {
+            return Long.parseLong(keyword);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     @Override

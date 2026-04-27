@@ -15,9 +15,9 @@ public interface StaffService {
     Result<?> registerMember(MemberRegisterRequest request);
 
     /**
-     * 按手机号后四位搜索
+     * 按会员ID、姓名、手机号尾号搜索
      */
-    Result<?> searchByPhoneTail(String tail, String role);
+    Result<?> searchMembers(String keyword, String tail, Integer limit, String role);
 
     /**
      * 会员详情
