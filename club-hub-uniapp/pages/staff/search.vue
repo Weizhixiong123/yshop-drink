@@ -261,6 +261,7 @@ const navToDetail = (item) => {
       }
     }
 
+  }
 
   .item-stats {
     display: flex;
