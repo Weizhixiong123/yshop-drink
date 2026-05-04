@@ -18,32 +18,41 @@
       <view class="login-card">
         <!-- #ifdef MP-WEIXIN -->
         <button
+          v-if="accessConfirmed"
           class="wx-login-btn"
           open-type="getPhoneNumber"
           @getphonenumber="onGetPhoneNumber"
           :disabled="loading"
         >
           <view class="btn-content">
-            <view class="wx-icon">
-              <view class="wx-eye-l"></view>
-              <view class="wx-eye-r"></view>
-              <view class="wx-smile"></view>
-            </view>
-            <text>{{ loading ? '登录中...' : '微信手机号一键登录' }}</text>
+            <text>{{ loading ? '登录中...' : '手机号快捷登录' }}</text>
+          </view>
+        </button>
+        <button v-else class="wx-login-btn pending-btn" @tap="showAccessConfirmTip">
+          <view class="btn-content">
+            <text>确认后快捷登录</text>
           </view>
         </button>
         <!-- #endif -->
 
+        <view class="access-note">
+          <checkbox-group class="access-check" @change="onAccessConfirmChange">
+            <label class="access-check-label">
+              <checkbox class="access-checkbox" value="confirmed" :checked="accessConfirmed" color="#07c160" />
+              <text>我已知晓并确认本人属于可登录人群</text>
+            </label>
+          </checkbox-group>
+        </view>
+
         <!-- #ifndef MP-WEIXIN -->
-        <view class="platform-tip">请在微信小程序中使用快捷登录</view>
+        <view class="platform-tip">请在小程序中使用手机号快捷登录</view>
         <!-- #endif -->
-        
-        <!-- 开发调试环境专属：快速模拟登录入口 -->
+
         <view v-if="STAFF_WX_LOGIN_MOCK" class="mock-actions">
           <view class="mock-title">-- 开发调试快捷入口 --</view>
           <view class="mock-btns">
-            <text class="mock-btn" @tap="mockStaffLogin">🧔🏻 模拟员工</text>
-            <text class="mock-btn" @tap="mockCustomerLogin">🧑🏻 模拟客户</text>
+            <text class="mock-btn" @tap="mockStaffLogin">模拟员工</text>
+            <text class="mock-btn" @tap="mockCustomerLogin">模拟客户</text>
           </view>
         </view>
       </view>
@@ -55,11 +64,12 @@
 <script setup>
 import { ref } from 'vue'
 import { staffWxLogin } from '@/api/staffAuth'
-import { customerLogin } from '@/api/customerAuth' // 引入客户登录接口用于测试
+import { customerLogin } from '@/api/customerAuth'
 import cookie from '@/utils/cookie'
 import { STAFF_WX_LOGIN_MOCK } from '@/config'
 
 const loading = ref(false)
+const accessConfirmed = ref(false)
 const MOCK_PHONE_CODE = 'dev-mock-phone-code'
 
 /**
@@ -95,10 +105,13 @@ const onLoginSuccess = (data) => {
 
 const loginWithPhoneCode = async (code) => {
   if (loading.value) return
+  if (!accessConfirmed.value) {
+    showAccessConfirmTip()
+    return
+  }
   loading.value = true
 
   try {
-    // 如果后端的 /api/auth/customer/login 已经支持接收 code 来统一微信登录，这里可以直接换成 customerLogin
     const data = await staffWxLogin({ code })
     onLoginSuccess(data)
   } catch (err) {
@@ -108,8 +121,17 @@ const loginWithPhoneCode = async (code) => {
   }
 }
 
+const onAccessConfirmChange = (e) => {
+  const values = e?.detail?.value || []
+  accessConfirmed.value = values.includes('confirmed')
+}
+
+const showAccessConfirmTip = () => {
+  uni.showToast({ title: '请先勾选登录人群确认', icon: 'none' })
+}
+
 /**
- * 微信小程序：手机号授权回调
+ * 小程序：手机号授权回调
  */
 const onGetPhoneNumber = async (e) => {
   const detail = e?.detail || {}
@@ -119,12 +141,6 @@ const onGetPhoneNumber = async (e) => {
   const code = detail.code
   if (code) {
     await loginWithPhoneCode(code)
-    return
-  }
-
-  if (STAFF_WX_LOGIN_MOCK) {
-    // 开启 MOCK 时，点击微信按钮默认走员工 mock（保持和以前一样）
-    mockStaffLogin()
     return
   }
 
@@ -139,26 +155,18 @@ const onGetPhoneNumber = async (e) => {
   uni.showToast({ title: '获取授权码失败', icon: 'none' })
 }
 
-/**
- * 模拟员工登录
- */
 const mockStaffLogin = async () => {
   uni.showToast({ title: '模拟员工登录中...', icon: 'none' })
   await loginWithPhoneCode(MOCK_PHONE_CODE)
 }
 
-/**
- * 模拟客户登录
- */
 const mockCustomerLogin = async () => {
   if (loading.value) return
   loading.value = true
   uni.showToast({ title: '模拟客户登录中...', icon: 'none' })
-  
+
   try {
-    // 调用之前的普通客户手机号登录接口进行模拟
     const data = await customerLogin({ phone: '13800138000' })
-    // 为了防止后端不返回 role 导致的一些问题，这里强制打上 customer 标签
     onLoginSuccess({ ...data, role: 'customer', phone: '13800138000' })
   } catch (err) {
     console.error('[mockCustomerLogin error]:', err)
@@ -264,7 +272,30 @@ const mockCustomerLogin = async () => {
   }
 }
 
-/* WeChat Login Button */
+.access-check {
+  min-height: 34rpx;
+}
+
+.access-note {
+  margin-top: 18rpx;
+}
+
+.access-check-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 21rpx;
+  line-height: 1.45;
+}
+
+.access-checkbox {
+  transform: scale(0.78);
+  transform-origin: left center;
+  margin-right: 6rpx;
+}
+
+/* Phone Login Button */
 .wx-login-btn {
   width: 100% !important;
   height: 100rpx;
@@ -296,41 +327,17 @@ const mockCustomerLogin = async () => {
     opacity: 0.5;
   }
 
+  &.pending-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.76) !important;
+    box-shadow: none;
+  }
+
   .btn-content {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 16rpx;
-  }
-
-  /* CSS WeChat icon */
-  .wx-icon {
-    width: 44rpx;
-    height: 36rpx;
-    background: #ffffff;
-    border-radius: 8rpx 8rpx 12rpx 12rpx;
-    position: relative;
-
-    .wx-eye-l, .wx-eye-r {
-      position: absolute;
-      width: 8rpx;
-      height: 8rpx;
-      background: #07c160;
-      border-radius: 50%;
-      top: 10rpx;
-    }
-    .wx-eye-l { left: 10rpx; }
-    .wx-eye-r { right: 10rpx; }
-    .wx-smile {
-      position: absolute;
-      bottom: 6rpx;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 16rpx;
-      height: 8rpx;
-      border-bottom: 3rpx solid #07c160;
-      border-radius: 0 0 10rpx 10rpx;
-    }
   }
 }
 
@@ -351,7 +358,6 @@ const mockCustomerLogin = async () => {
   letter-spacing: 2rpx;
 }
 
-/* 开发调试入口样式 */
 .mock-actions {
   margin-top: 50rpx;
   padding-top: 40rpx;
@@ -380,7 +386,7 @@ const mockCustomerLogin = async () => {
   border-radius: 40rpx;
   font-size: 26rpx;
   border: 1px solid rgba(230, 162, 60, 0.3);
-  
+
   &:active {
     opacity: 0.7;
   }

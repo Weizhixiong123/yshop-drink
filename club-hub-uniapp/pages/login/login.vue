@@ -19,8 +19,8 @@
 
       <!-- Login Card -->
       <view class="login-card">
-        <view class="card-title">微信快捷登录</view>
-        <view class="card-desc">使用微信授权手机号登录，请确保老板已添加你的手机号为员工</view>
+        <view class="card-title">手机号快捷登录</view>
+        <view class="card-desc">使用手机号登录，请确保老板已添加你的手机号为员工</view>
 
         <!-- #ifdef MP-WEIXIN -->
         <button
@@ -30,18 +30,13 @@
           :disabled="loading"
         >
           <view class="btn-content">
-            <view class="wx-icon">
-              <view class="wx-eye-l"></view>
-              <view class="wx-eye-r"></view>
-              <view class="wx-smile"></view>
-            </view>
-            <text>{{ loading ? '登录中...' : '微信手机号一键登录' }}</text>
+            <text>{{ loading ? '登录中...' : '手机号快捷登录' }}</text>
           </view>
         </button>
         <!-- #endif -->
 
         <!-- #ifndef MP-WEIXIN -->
-        <view class="platform-tip">请在微信小程序中使用员工手机号登录</view>
+        <view class="platform-tip">请在小程序中使用员工手机号登录</view>
         <!-- #endif -->
       </view>
 
@@ -99,7 +94,7 @@ const loginWithPhoneCode = async (code) => {
 }
 
 /**
- * 微信小程序：手机号授权回调
+ * 小程序：手机号授权回调
  * wx.getPhoneNumber 成功后拿到 code，发给后端换 token
  */
 const onGetPhoneNumber = async (e) => {
@@ -246,7 +241,7 @@ const onGetPhoneNumber = async (e) => {
   }
 }
 
-/* WeChat Login Button */
+/* Phone Login Button */
 .wx-login-btn {
   width: 100% !important;
   height: 100rpx;
@@ -283,36 +278,6 @@ const onGetPhoneNumber = async (e) => {
     align-items: center;
     justify-content: center;
     gap: 16rpx;
-  }
-
-  /* CSS WeChat icon */
-  .wx-icon {
-    width: 44rpx;
-    height: 36rpx;
-    background: #ffffff;
-    border-radius: 8rpx 8rpx 12rpx 12rpx;
-    position: relative;
-
-    .wx-eye-l, .wx-eye-r {
-      position: absolute;
-      width: 8rpx;
-      height: 8rpx;
-      background: #07c160;
-      border-radius: 50%;
-      top: 10rpx;
-    }
-    .wx-eye-l { left: 10rpx; }
-    .wx-eye-r { right: 10rpx; }
-    .wx-smile {
-      position: absolute;
-      bottom: 6rpx;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 16rpx;
-      height: 8rpx;
-      border-bottom: 3rpx solid #07c160;
-      border-radius: 0 0 10rpx 10rpx;
-    }
   }
 }
 
