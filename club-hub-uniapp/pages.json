@@ -31,6 +31,14 @@
     {
       "path": "pages/customer/info",
       "style": { "navigationBarTitleText": "", "navigationBarBackgroundColor": "#f7f4ef", "navigationBarTextStyle": "black" }
+    },
+    {
+      "path": "pages/entry/entry",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/login/login",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
     }
   ],
   "globalStyle": {

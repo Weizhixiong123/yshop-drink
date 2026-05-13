@@ -56,10 +56,14 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { onHide, onLoad, onShow, onUnload } from '@dcloudio/uni-app'
+import { onHide, onLoad, onShareAppMessage, onShareTimeline, onShow, onUnload } from '@dcloudio/uni-app'
 import { customerInfo } from '@/api/customer'
 import cookie from '@/utils/cookie'
 import { connectCustomerSocket, disconnectCustomerSocket } from '@/utils/staffSocket'
+
+const CUSTOMER_SHARE_PATH = '/pages/customer/member-login'
+const CUSTOMER_SHARE_TITLE = '醉岛 Bar 会员服务'
+const CUSTOMER_SHARE_IMAGE = '/static/texas_bar_bg.png'
 
 const loading = ref(false)
 const info = ref({})
@@ -85,6 +89,15 @@ const displayName = computed(() => {
   const tail = phone.slice(-4)
   return tail ? `会员_${tail}` : '尊贵的会员'
 })
+
+const enableCustomerShareMenu = () => {
+  // #ifdef MP-WEIXIN
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline', 'copyUrl']
+  })
+  // #endif
+}
 
 const loadInfo = async () => {
   const phone = cookie.get('customerPhone')
@@ -118,9 +131,22 @@ const onMemberDataUpdate = (message = {}) => {
 }
 
 onLoad(() => {
+  enableCustomerShareMenu()
   uni.$on('MEMBER_DATA_UPDATE', onMemberDataUpdate)
   uni.$on('USER_DATA_UPDATE', onMemberDataUpdate)
 })
+
+onShareAppMessage(() => ({
+  title: CUSTOMER_SHARE_TITLE,
+  path: CUSTOMER_SHARE_PATH,
+  imageUrl: CUSTOMER_SHARE_IMAGE
+}))
+
+onShareTimeline(() => ({
+  title: CUSTOMER_SHARE_TITLE,
+  query: '',
+  imageUrl: CUSTOMER_SHARE_IMAGE
+}))
 
 onShow(() => {
   pageVisible.value = true

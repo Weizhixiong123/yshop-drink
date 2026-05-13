@@ -2,6 +2,7 @@ package com.clubhub.auth.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.clubhub.auth.request.CustomerLoginRequest;
+import com.clubhub.auth.request.CustomerWxLoginRequest;
 import com.clubhub.auth.request.StaffLoginRequest;
 import com.clubhub.auth.request.StaffWxLoginRequest;
 import com.clubhub.auth.response.CustomerLoginResponse;
@@ -13,13 +14,19 @@ import com.clubhub.entity.Staff;
 import com.clubhub.mapper.MemberMapper;
 import com.clubhub.mapper.StaffMapper;
 import com.clubhub.util.JwtUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberMapper memberMapper;
     private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${wechat.miniapp.app-id:}")
     private String wechatMiniAppId;
@@ -111,6 +119,28 @@ public class AuthServiceImpl implements AuthService {
         return Result.ok(new CustomerLoginResponse(token, phone));
     }
 
+    @Override
+    public Result<?> customerWxLogin(CustomerWxLoginRequest request) {
+        Result<String> phoneResult = resolveWechatPhone(request.getCode());
+        if (phoneResult.getCode() != 200) {
+            return Result.fail(phoneResult.getMsg());
+        }
+
+        String phone = phoneResult.getData();
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            return Result.fail("手机号格式不正确");
+        }
+
+        Member member = memberMapper.selectOne(
+                new LambdaQueryWrapper<Member>().eq(Member::getPhone, phone));
+        if (member == null) {
+            return Result.fail("未找到会员信息");
+        }
+
+        String token = jwtUtil.generateToken(String.valueOf(member.getId()), "customer");
+        return Result.ok(new CustomerLoginResponse(token, phone));
+    }
+
     private Result<String> resolveWechatPhone(String code) {
         String mockPhone = trimToNull(wechatMockPhone);
         if (mockPhone != null) {
@@ -132,8 +162,13 @@ public class AuthServiceImpl implements AuthService {
                 .toUriString();
 
         try {
+            String body = objectMapper.writeValueAsString(Map.of("code", code));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentLength(body.getBytes(StandardCharsets.UTF_8).length);
+
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(url, Map.of("code", code), Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, new HttpEntity<>(body, headers), Map.class);
             if (response == null) {
                 return Result.fail("微信手机号接口无响应");
             }
@@ -156,6 +191,8 @@ public class AuthServiceImpl implements AuthService {
                 return Result.fail("微信未返回手机号");
             }
             return Result.ok(phone);
+        } catch (JsonProcessingException e) {
+            return Result.fail("微信手机号请求参数构造失败");
         } catch (RestClientException e) {
             return Result.fail("调用微信手机号接口失败：" + e.getMessage());
         }

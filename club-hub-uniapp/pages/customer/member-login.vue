@@ -63,16 +63,46 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { staffWxLogin } from '@/api/staffAuth'
 import { customerLogin, customerWxLogin } from '@/api/customerAuth'
 import cookie from '@/utils/cookie'
 import { STAFF_WX_LOGIN_MOCK } from '@/config'
+
+const CUSTOMER_SHARE_PATH = '/pages/customer/member-login'
+const CUSTOMER_SHARE_TITLE = '醉岛 Bar 会员服务'
+const CUSTOMER_SHARE_IMAGE = '/static/texas_bar_bg.png'
 
 const loading = ref(false)
 const accessConfirmed = ref(false)
 const staffEntryTapCount = ref(0)
 let staffEntryTapTimer = null
 const MOCK_PHONE_CODE = 'dev-mock-phone-code'
+
+const enableCustomerShareMenu = () => {
+  // #ifdef MP-WEIXIN
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline', 'copyUrl']
+  })
+  // #endif
+}
+
+onLoad(() => {
+  enableCustomerShareMenu()
+})
+
+onShareAppMessage(() => ({
+  title: CUSTOMER_SHARE_TITLE,
+  path: CUSTOMER_SHARE_PATH,
+  imageUrl: CUSTOMER_SHARE_IMAGE
+}))
+
+onShareTimeline(() => ({
+  title: CUSTOMER_SHARE_TITLE,
+  query: '',
+  imageUrl: CUSTOMER_SHARE_IMAGE
+}))
 
 const onBrandTap = () => {
   staffEntryTapCount.value += 1

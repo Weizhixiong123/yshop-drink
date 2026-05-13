@@ -1,6 +1,7 @@
 package com.clubhub.auth.controller;
 
 import com.clubhub.auth.request.CustomerLoginRequest;
+import com.clubhub.auth.request.CustomerWxLoginRequest;
 import com.clubhub.auth.request.StaffLoginRequest;
 import com.clubhub.auth.request.StaffWxLoginRequest;
 import com.clubhub.auth.service.AuthService;
@@ -38,5 +39,13 @@ public class AuthController {
     @PostMapping("/customer/login")
     public Result<?> customerLogin(@RequestBody @Valid CustomerLoginRequest request) {
         return authService.customerLogin(request);
+    }
+
+    /**
+     * 客户微信手机号授权登录
+     */
+    @PostMapping("/customer/wx-login")
+    public Result<?> customerWxLogin(@RequestBody @Valid CustomerWxLoginRequest request) {
+        return authService.customerWxLogin(request);
     }
 }
