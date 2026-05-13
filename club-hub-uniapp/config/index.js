@@ -1,4 +1,4 @@
-export const VUE_APP_API_URL = 'https://api.zuidao.cloud';
+export const VUE_APP_API_URL = 'https://zuidao.cloud';
 export const VUE_APP_STAFF_WS_URL = VUE_APP_API_URL.replace(/^http/, 'ws') + '/ws/staff';
 export const VUE_APP_CUSTOMER_WS_URL = VUE_APP_API_URL.replace(/^http/, 'ws') + '/ws/customer';
 export const VUE_APP_WS_URL = VUE_APP_STAFF_WS_URL;
