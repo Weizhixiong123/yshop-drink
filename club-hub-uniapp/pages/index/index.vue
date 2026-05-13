@@ -72,7 +72,7 @@ import cookie from '@/utils/cookie'
 onShow(() => {
   const token = cookie.get('accessToken')
   if (!token) {
-    uni.redirectTo({ url: '/pages/login/login' })
+    uni.redirectTo({ url: '/pages/staff/login' })
   }
 })
 

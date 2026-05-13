@@ -19,7 +19,7 @@
       <view class="panel-header">
         <view class="welcome-text">
           <view class="greeting">欢迎回来</view>
-          <view class="name">{{ info.name || '尊贵的会员' }}</view>
+          <view class="name">{{ displayName }}</view>
         </view>
       </view>
 
@@ -75,10 +75,21 @@ const memberCode = computed(() => {
   return id ? String(id).padStart(6, '0') : '--'
 })
 
+const displayName = computed(() => {
+  const name = String(info.value.name || '').trim()
+  if (name && name !== '会员用户') {
+    return name
+  }
+
+  const phone = String(info.value.phone || cookie.get('customerPhone') || '')
+  const tail = phone.slice(-4)
+  return tail ? `会员_${tail}` : '尊贵的会员'
+})
+
 const loadInfo = async () => {
   const phone = cookie.get('customerPhone')
   if (!phone) {
-    uni.reLaunch({ url: '/pages/entry/entry' })
+    uni.reLaunch({ url: '/pages/customer/member-login' })
     return
   }
   if (loading.value) return
@@ -131,18 +142,20 @@ onUnload(() => {
 
 <style lang="scss" scoped>
 .page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #111;
-  overflow: hidden;
+  min-height: 100vh;
+  background: #f7f7f7;
+  overflow-x: hidden;
 }
 
 .hero-bg {
-  flex: 1;
   position: relative;
   width: 100%;
+  height: 620rpx;
+  min-height: 42vh;
+  max-height: 48vh;
   z-index: 1;
+  overflow: hidden;
+  background: #111;
 
   .hero-image {
     position: absolute;
@@ -158,7 +171,7 @@ onUnload(() => {
 
   .hero-brand {
     position: absolute;
-    top: 45%;
+    top: 46%;
     transform: translateY(-50%);
     left: 0; right: 0;
     text-align: center;
@@ -198,12 +211,13 @@ onUnload(() => {
 }
 
 .panel {
-  flex-shrink: 0;
   position: relative;
   z-index: 2;
   background: #ffffff;
   border-radius: 40rpx 40rpx 0 0;
-  padding: 60rpx 40rpx 80rpx;
+  min-height: calc(100vh - 580rpx);
+  padding: 56rpx 40rpx calc(72rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   box-shadow: 0 -10rpx 30rpx rgba(0,0,0,0.15);
   margin-top: -40rpx;
 }
@@ -212,7 +226,7 @@ onUnload(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 50rpx;
+  margin-bottom: 44rpx;
   
   .welcome-text {
     .greeting {

@@ -8,7 +8,7 @@
 
     <view class="login-content">
       <!-- Brand Header -->
-      <view class="hero-brand">
+      <view class="hero-brand" @tap="onBrandTap">
         <view class="logo">醉<text class="spade">♠</text>岛</view>
         <view class="subtitle">TEXAS HOLD'EM BAR</view>
         <view class="slogan">FOLLOW YOUR HEART</view>
@@ -25,12 +25,12 @@
           :disabled="loading"
         >
           <view class="btn-content">
-            <text>{{ loading ? '登录中...' : '手机号快捷登录' }}</text>
+            <text>{{ loading ? '登录中...' : '确认后快捷登陆' }}</text>
           </view>
         </button>
         <button v-else class="wx-login-btn pending-btn" @tap="showAccessConfirmTip">
           <view class="btn-content">
-            <text>确认后快捷登录</text>
+            <text>确认后快捷登陆</text>
           </view>
         </button>
         <!-- #endif -->
@@ -64,13 +64,34 @@
 <script setup>
 import { ref } from 'vue'
 import { staffWxLogin } from '@/api/staffAuth'
-import { customerLogin } from '@/api/customerAuth'
+import { customerLogin, customerWxLogin } from '@/api/customerAuth'
 import cookie from '@/utils/cookie'
 import { STAFF_WX_LOGIN_MOCK } from '@/config'
 
 const loading = ref(false)
 const accessConfirmed = ref(false)
+const staffEntryTapCount = ref(0)
+let staffEntryTapTimer = null
 const MOCK_PHONE_CODE = 'dev-mock-phone-code'
+
+const onBrandTap = () => {
+  staffEntryTapCount.value += 1
+
+  if (staffEntryTapTimer) {
+    clearTimeout(staffEntryTapTimer)
+  }
+
+  if (staffEntryTapCount.value >= 5) {
+    staffEntryTapCount.value = 0
+    uni.navigateTo({ url: '/pages/staff/login' })
+    return
+  }
+
+  staffEntryTapTimer = setTimeout(() => {
+    staffEntryTapCount.value = 0
+    staffEntryTapTimer = null
+  }, 1600)
+}
 
 /**
  * 登录成功统一处理，根据 role 自动跳转
@@ -140,7 +161,7 @@ const onGetPhoneNumber = async (e) => {
 
   const code = detail.code
   if (code) {
-    await loginWithPhoneCode(code)
+    await loginCustomerWithPhoneCode(code)
     return
   }
 
@@ -153,6 +174,24 @@ const onGetPhoneNumber = async (e) => {
     return
   }
   uni.showToast({ title: '获取授权码失败', icon: 'none' })
+}
+
+const loginCustomerWithPhoneCode = async (code) => {
+  if (loading.value) return
+  if (!accessConfirmed.value) {
+    showAccessConfirmTip()
+    return
+  }
+  loading.value = true
+
+  try {
+    const data = await customerWxLogin({ code })
+    onLoginSuccess({ ...data, role: 'customer' })
+  } catch (err) {
+    console.error('[customerWxLogin error]:', err)
+  } finally {
+    loading.value = false
+  }
 }
 
 const mockStaffLogin = async () => {
@@ -338,6 +377,14 @@ const mockCustomerLogin = async () => {
     align-items: center;
     justify-content: center;
     gap: 16rpx;
+
+    text {
+      color: #ffffff;
+      font-size: 32rpx;
+      font-weight: bold;
+      letter-spacing: 2rpx;
+      line-height: 100rpx;
+    }
   }
 }
 

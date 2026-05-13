@@ -1,11 +1,11 @@
 {
   "pages": [
     {
-      "path": "pages/entry/entry",
+      "path": "pages/customer/member-login",
       "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
     },
     {
-      "path": "pages/login/login",
+      "path": "pages/staff/login",
       "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
     },
     {

@@ -9,6 +9,6 @@ export const handleLoginFailure = () => {
   cookie.remove('customerPhone')
 
   uni.redirectTo({
-    url: '/pages/entry/entry',
+    url: '/pages/customer/member-login',
   })
 }
