@@ -6,11 +6,18 @@ function resolveApiMessage(error, fallback) {
 }
 
 function normalizeStaffItem(item) {
+  const roleMap = {
+    owner: '店东',
+    manager: '店长',
+    staff: '店员'
+  }
+
   return {
     id: item.id,
     name: item.name || '',
     phone: item.phone || '',
-    role: item.role === 'owner' ? '店东' : '店员',
+    role: roleMap[item.role] || '店员',
+    rawRole: item.role || 'staff',
     status: item.status === 0 ? '禁用' : '正常',
     rawStatus: item.status
   }

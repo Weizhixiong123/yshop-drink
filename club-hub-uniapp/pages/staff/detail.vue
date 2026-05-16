@@ -54,7 +54,7 @@
           <view class="val price">¥{{ member.balance }}</view>
         </view>
         <view class="right btns">
-          <view class="btn primary" @tap="openModal('balance', 'add')">+ 储值充值</view>
+          <view v-if="canRechargeBalance" class="btn primary" @tap="openModal('balance', 'add')">+ 储值充值</view>
           <view class="btn outline" @tap="openModal('balance', 'sub')">- 消费扣减</view>
         </view>
       </view>
@@ -98,9 +98,11 @@ import { ref, computed } from 'vue'
 import { onLoad, onShow, onUnload } from '@dcloudio/uni-app'
 import { memberDetail, memberOperate, memberUpdateRemark } from '@/api/staff'
 import { connectStaffSocket } from '@/utils/staffSocket'
+import cookie from '@/utils/cookie'
 
 const member = ref(null)
 const memberId = ref(null)
+const userRole = ref('')
 
 const showModal = ref(false)
 const opTarget = ref('') // 'liquor' | 'points' | 'balance'
@@ -147,6 +149,7 @@ onLoad((options) => {
 })
 
 onShow(() => {
+  userRole.value = cookie.get('userRole') || ''
   connectStaffSocket()
 })
 
@@ -196,7 +199,14 @@ const previewVal = computed(() => {
   return res;
 })
 
+const canRechargeBalance = computed(() => userRole.value !== 'staff')
+
 const openModal = (target, type) => {
+  if (target === 'balance' && type === 'add' && !canRechargeBalance.value) {
+    uni.showToast({ title: '暂无储值充值权限', icon: 'none' })
+    return
+  }
+
   opTarget.value = target
   opType.value = type
   opAmount.value = ''

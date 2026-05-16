@@ -97,8 +97,8 @@ public class AuthServiceImpl implements AuthService {
         Staff staff = staffMapper.selectOne(
                 new LambdaQueryWrapper<Staff>()
                         .eq(Staff::getStatus, 1)
-                        .eq(Staff::getRole, "staff")
-                        .eq(Staff::getPhone, phone));
+                        .eq(Staff::getPhone, phone)
+                        .in(Staff::getRole, "staff", "manager"));
         if (staff == null) {
             return Result.fail("该手机号未添加为店员");
         }

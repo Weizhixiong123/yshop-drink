@@ -50,7 +50,7 @@ public class OwnerServiceImpl implements OwnerService {
         Staff staff = new Staff();
         staff.setPhone(phone);
         staff.setName(request.getName().trim());
-        staff.setRole("staff");
+        staff.setRole(normalizeStaffRole(request.getRole()));
         staff.setStatus(1);
         staff.setDeleted(0);
         staffMapper.insert(staff);
@@ -60,7 +60,9 @@ public class OwnerServiceImpl implements OwnerService {
     @Override
     public Result<?> listStaff() {
         List<Staff> list = staffMapper.selectList(
-                new LambdaQueryWrapper<Staff>().eq(Staff::getRole, "staff").orderByDesc(Staff::getCreateTime));
+                new LambdaQueryWrapper<Staff>()
+                        .in(Staff::getRole, "staff", "manager")
+                        .orderByDesc(Staff::getCreateTime));
         List<StaffResponse> result = list.stream().map(s -> {
             StaffResponse r = new StaffResponse();
             BeanUtils.copyProperties(s, r);
@@ -89,6 +91,7 @@ public class OwnerServiceImpl implements OwnerService {
         staff.setId(request.getId());
         staff.setPhone(phone);
         staff.setName(request.getName().trim());
+        staff.setRole(normalizeStaffRole(request.getRole()));
         staffMapper.updateById(staff);
         return Result.ok();
     }
@@ -211,5 +214,12 @@ public class OwnerServiceImpl implements OwnerService {
             return 20L;
         }
         return Math.min(Math.max(pageSize, 1L), 100L);
+    }
+
+    private String normalizeStaffRole(String role) {
+        if ("manager".equals(role)) {
+            return "manager";
+        }
+        return "staff";
     }
 }

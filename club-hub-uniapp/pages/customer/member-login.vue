@@ -146,7 +146,7 @@ const onLoginSuccess = (data) => {
 
   // 无感区分：根据角色自动分配跳转页面
   setTimeout(() => {
-    if (role === 'staff' || role === 'admin') {
+    if (role === 'staff' || role === 'manager' || role === 'admin') {
       uni.reLaunch({ url: '/pages/index/index' }) // 员工进入工作台
     } else {
       uni.reLaunch({ url: '/pages/customer/info' }) // 客户进入个人中心

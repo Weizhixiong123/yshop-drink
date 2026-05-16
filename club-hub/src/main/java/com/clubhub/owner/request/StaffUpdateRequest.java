@@ -18,4 +18,7 @@ public class StaffUpdateRequest {
     @NotBlank(message = "姓名不能为空")
     @Size(max = 50, message = "姓名不能超过 50 字")
     private String name;
+
+    @Pattern(regexp = "^(staff|manager)$", message = "员工角色只能是 staff 或 manager")
+    private String role;
 }

@@ -9,12 +9,12 @@ const submitting = ref(false)
 const deletingStaffId = ref('')
 const errorMsg = ref('')
 const formError = ref('')
-const formData = ref({ name: '', phone: '' })
+const formData = ref({ name: '', phone: '', role: 'staff' })
 
 const phonePattern = /^1[3-9]\d{9}$/
 
 const resetForm = () => {
-  formData.value = { name: '', phone: '' }
+  formData.value = { name: '', phone: '', role: 'staff' }
   editingStaffId.value = ''
   formError.value = ''
 }
@@ -28,7 +28,8 @@ const openEditModal = (staff) => {
   editingStaffId.value = staff.id
   formData.value = {
     name: staff.name,
-    phone: staff.phone
+    phone: staff.phone,
+    role: staff.rawRole || 'staff'
   }
   formError.value = ''
   showModal.value = true
@@ -63,7 +64,8 @@ const handleSubmit = async () => {
   const payload = {
     id: editingStaffId.value,
     name: formData.value.name.trim(),
-    phone: formData.value.phone.trim()
+    phone: formData.value.phone.trim(),
+    role: formData.value.role
   }
 
   if (!payload.name) {
@@ -83,6 +85,11 @@ const handleSubmit = async () => {
 
   if (!phonePattern.test(payload.phone)) {
     formError.value = '手机号格式不正确'
+    return
+  }
+
+  if (!['staff', 'manager'].includes(payload.role)) {
+    formError.value = '请选择正确的角色权限'
     return
   }
 
@@ -203,7 +210,10 @@ onMounted(() => {
           </div>
           <div class="form-item">
             <label>角色权限</label>
-            <input type="text" value="店员 (系统默认)" disabled />
+            <select v-model="formData.role" required>
+              <option value="staff">店员</option>
+              <option value="manager">店长</option>
+            </select>
           </div>
           <div v-if="formError" class="form-error">{{ formError }}</div>
           <div class="form-actions">

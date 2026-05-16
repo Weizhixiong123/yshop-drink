@@ -27,7 +27,7 @@ public interface StaffService {
     /**
      * 积分/存酒/储值加减操作
      */
-    Result<?> operate(MemberOperateRequest request, String staffId);
+    Result<?> operate(MemberOperateRequest request, String staffId, String role);
 
     /**
      * 修改备注

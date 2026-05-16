@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS staff (
     id          VARCHAR(32) PRIMARY KEY COMMENT '员工UUID',
     phone       VARCHAR(20)  NOT NULL UNIQUE COMMENT '手机号',
     name        VARCHAR(50)  NOT NULL COMMENT '姓名',
-    role        VARCHAR(20)  NOT NULL DEFAULT 'staff' COMMENT '角色: staff=店员',
+    role        VARCHAR(20)  NOT NULL DEFAULT 'staff' COMMENT '角色: staff=店员, manager=店长',
     status      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态: 0=禁用, 1=启用',
     create_time DATETIME     DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

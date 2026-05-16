@@ -95,7 +95,8 @@ public class StaffServiceImpl implements StaffService {
             return Result.ok(List.of());
         }
 
-        boolean shouldShowFullPhone = "owner".equals(role) || (phoneTailSearch && hasDuplicatePhoneTail(list, query));
+        boolean shouldShowFullPhone = ("owner".equals(role) || "manager".equals(role))
+                || (phoneTailSearch && hasDuplicatePhoneTail(list, query));
 
         List<MemberSearchItemResponse> result = list.stream().map(m -> {
             MemberSearchItemResponse item = new MemberSearchItemResponse();
@@ -171,7 +172,7 @@ public class StaffServiceImpl implements StaffService {
         detail.setBalance(m.getBalance());
         detail.setRemark(m.getRemark());
 
-        if ("owner".equals(role)) {
+        if ("owner".equals(role) || "manager".equals(role)) {
             detail.setPhone(m.getPhone());
         } else {
             String tail = m.getPhone().substring(m.getPhone().length() - 4);
@@ -189,7 +190,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional
-    public Result<?> operate(MemberOperateRequest request, String staffId) {
+    public Result<?> operate(MemberOperateRequest request, String staffId, String role) {
         BigDecimal value = request.getValue();
         OperationType type = request.getType();
         Long memberId = request.getMemberId();
@@ -200,6 +201,9 @@ public class StaffServiceImpl implements StaffService {
         Member member = memberMapper.selectById(memberId);
         if (member == null) {
             return Result.fail("客户不存在");
+        }
+        if (type == OperationType.ADD_BALANCE && !canAddBalance(role)) {
+            return Result.fail("只有店长可以加储值");
         }
 
         BigDecimal beforeValue;
@@ -341,5 +345,9 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public Staff getById(String staffId) {
         return staffMapper.selectById(staffId);
+    }
+
+    private boolean canAddBalance(String role) {
+        return "manager".equals(role) || "owner".equals(role);
     }
 }

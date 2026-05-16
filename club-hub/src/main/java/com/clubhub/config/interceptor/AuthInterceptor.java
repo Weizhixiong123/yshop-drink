@@ -44,8 +44,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            // 店员不能访问 /api/owner/**
-            if ("staff".equals(role) && uri.startsWith("/api/owner/")) {
+            // 只有店东能访问 /api/owner/**
+            if (uri.startsWith("/api/owner/") && !"owner".equals(role)) {
                 response.setStatus(403);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"code\":403,\"msg\":\"无权限\"}");

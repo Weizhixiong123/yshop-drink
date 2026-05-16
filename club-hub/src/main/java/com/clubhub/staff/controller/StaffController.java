@@ -54,7 +54,8 @@ public class StaffController {
     public Result<?> operate(@RequestBody @Valid MemberOperateRequest request,
                              HttpServletRequest httpRequest) {
         String staffId = (String) httpRequest.getAttribute("userId");
-        return staffService.operate(request, staffId);
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.operate(request, staffId, role);
     }
 
     /**

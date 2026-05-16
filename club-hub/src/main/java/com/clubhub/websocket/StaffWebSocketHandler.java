@@ -93,7 +93,7 @@ public class StaffWebSocketHandler extends TextWebSocketHandler {
 
         try {
             String role = jwtUtil.getRole(token);
-            if (!"staff".equals(role) && !"owner".equals(role)) {
+            if (!"staff".equals(role) && !"manager".equals(role) && !"owner".equals(role)) {
                 return null;
             }
             return new StaffIdentity(jwtUtil.getUserId(token), role);

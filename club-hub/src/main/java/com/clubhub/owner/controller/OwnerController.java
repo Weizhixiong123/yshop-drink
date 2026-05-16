@@ -95,7 +95,8 @@ public class OwnerController {
     public Result<?> operateMember(@RequestBody @Valid MemberOperateRequest request,
                                    HttpServletRequest httpRequest) {
         String staffId = (String) httpRequest.getAttribute("userId");
-        return staffService.operate(request, staffId);
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.operate(request, staffId, role);
     }
 
     @GetMapping("/member/export")

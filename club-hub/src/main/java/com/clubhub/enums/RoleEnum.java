@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum RoleEnum {
     OWNER("owner", "店东"),
+    MANAGER("manager", "店长"),
     STAFF("staff", "店员"),
     CUSTOMER("customer", "客户");
 
