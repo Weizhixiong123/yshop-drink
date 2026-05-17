@@ -20,6 +20,10 @@
         <view class="welcome-text">
           <view class="greeting">欢迎回来</view>
           <view class="name">{{ displayName }}</view>
+          <view class="member-level">
+            <text>{{ levelLabel(info.level) }}</text>
+            <text class="help-icon" @tap="showLevelModal = true">?</text>
+          </view>
         </view>
       </view>
 
@@ -37,6 +41,10 @@
           <view class="field-label">余额<text class="en">BALANCE</text></view>
           <view class="balance-value">¥{{ formatMoney(info.balance) }}</view>
         </view>
+        <view class="split-balance">
+          <view>本金 ¥{{ formatMoney(info.principalBalance) }}</view>
+          <view>赠送 ¥{{ formatMoney(info.bonusBalance) }}</view>
+        </view>
 
         <view class="mini-stats">
           <view class="mini-stat">
@@ -50,6 +58,15 @@
           </view>
         </view>
       </view>
+    </view>
+
+    <view class="modal-mask" v-if="showLevelModal" @tap="showLevelModal = false"></view>
+    <view class="level-modal" v-if="showLevelModal">
+      <view class="modal-title">会员等级说明</view>
+      <view class="rule-line">黄金会员：单笔充值本金满2000元，或单月累计充值本金满4000元即可自动升级</view>
+      <view class="rule-line">白金会员：单笔充值本金满5000元即可升级</view>
+      <view class="rule-line">温馨提示：会员升级仅统计实际充值本金，赠送金额不参与等级晋升</view>
+      <view class="modal-btn" @tap="showLevelModal = false">知道了</view>
     </view>
   </view>
 </template>
@@ -68,6 +85,7 @@ const CUSTOMER_SHARE_IMAGE = '/static/texas_bar_bg.png'
 const loading = ref(false)
 const info = ref({})
 const pageVisible = ref(false)
+const showLevelModal = ref(false)
 
 const formatMoney = (value) => {
   const numberValue = Number(value || 0)
@@ -89,6 +107,14 @@ const displayName = computed(() => {
   const tail = phone.slice(-4)
   return tail ? `会员_${tail}` : '尊贵的会员'
 })
+
+const levelLabel = (level) => ({
+  normal: '普通会员',
+  gold: '黄金会员',
+  platinum: '白金会员',
+  black_gold: '黑金会员',
+  black_diamond: '黑钻会员'
+}[level] || '普通会员')
 
 const enableCustomerShareMenu = () => {
   // #ifdef MP-WEIXIN
@@ -266,6 +292,26 @@ onUnload(() => {
       font-weight: 900;
       color: #111;
     }
+    .member-level {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+      margin-top: 14rpx;
+      color: #5b3a22;
+      font-size: 24rpx;
+      font-weight: 800;
+    }
+    .help-icon {
+      width: 34rpx;
+      height: 34rpx;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22rpx;
+    }
   }
 }
 
@@ -330,6 +376,19 @@ onUnload(() => {
   border-bottom: 2rpx solid rgba(255, 232, 194, 0.14);
 }
 
+.split-balance {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  padding: 22rpx 0 4rpx;
+  color: rgba(255, 244, 225, 0.86);
+  font-size: 24rpx;
+  font-weight: 800;
+  border-bottom: 2rpx solid rgba(255, 232, 194, 0.14);
+}
+
 .balance-value {
   max-width: 460rpx;
   color: #fff8ea;
@@ -346,6 +405,54 @@ onUnload(() => {
   display: flex;
   align-items: stretch;
   padding-top: 26rpx;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.58);
+  z-index: 50;
+}
+
+.level-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 620rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 34rpx;
+  z-index: 51;
+  box-shadow: 0 20rpx 50rpx rgba(0,0,0,0.18);
+}
+
+.modal-title {
+  color: #111;
+  font-size: 34rpx;
+  font-weight: 900;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.rule-line {
+  color: #333;
+  font-size: 26rpx;
+  line-height: 1.6;
+  margin-bottom: 18rpx;
+}
+
+.modal-btn {
+  height: 78rpx;
+  margin-top: 24rpx;
+  border-radius: 16rpx;
+  background: #111;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 800;
 }
 
 .mini-stat {

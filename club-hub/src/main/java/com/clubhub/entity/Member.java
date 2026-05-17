@@ -36,6 +36,18 @@ public class Member {
     /** 当前储值余额 */
     private BigDecimal balance;
 
+    /** 本金余额 */
+    private BigDecimal principalBalance;
+
+    /** 赠送余额 */
+    private BigDecimal bonusBalance;
+
+    /** 会员等级 */
+    private String level;
+
+    /** 是否店东手动锁定等级 */
+    private Integer levelManual;
+
     /** 备注（SA证、私酒、特殊说明等） */
     @Size(max = 500, message = "备注不能超过 500 字")
     private String remark;

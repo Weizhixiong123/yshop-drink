@@ -4,8 +4,13 @@ import com.clubhub.dto.Result;
 import com.clubhub.entity.Staff;
 import com.clubhub.staff.request.MemberInfoUpdateRequest;
 import com.clubhub.staff.request.MemberOperateRequest;
+import com.clubhub.staff.request.MemberPackageConsumeRequest;
+import com.clubhub.staff.request.MemberRechargeRequest;
 import com.clubhub.staff.request.MemberRegisterRequest;
 import com.clubhub.staff.request.MemberRemarkUpdateRequest;
+import com.clubhub.staff.request.GroupBuyWineRequest;
+import com.clubhub.staff.request.GiftChipsRequest;
+import com.clubhub.staff.request.PointsExchangeRequest;
 
 public interface StaffService {
 
@@ -28,6 +33,16 @@ public interface StaffService {
      * 积分/存酒/储值加减操作
      */
     Result<?> operate(MemberOperateRequest request, String staffId, String role);
+
+    Result<?> recharge(MemberRechargeRequest request, String staffId, String role);
+
+    Result<?> consumePackage(MemberPackageConsumeRequest request, String staffId, String role);
+
+    Result<?> groupBuyWine(GroupBuyWineRequest request, String staffId);
+
+    Result<?> exchangePoints(PointsExchangeRequest request, String staffId, String role);
+
+    Result<?> giftChips(GiftChipsRequest request, String staffId, String role);
 
     /**
      * 修改备注

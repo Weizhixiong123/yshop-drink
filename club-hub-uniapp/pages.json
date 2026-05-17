@@ -22,7 +22,27 @@
     },
     {
       "path": "pages/staff/detail",
-      "style": { "navigationBarTitleText": "会员详情", "navigationBarBackgroundColor": "#ffffff", "navigationBarTextStyle": "black" }
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/staff/liquor",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/staff/points-exchange",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/staff/package-consume",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "black" }
+    },
+    {
+      "path": "pages/staff/points-manage",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
+    },
+    {
+      "path": "pages/staff/records",
+      "style": { "navigationStyle": "custom", "navigationBarTextStyle": "white" }
     },
     {
       "path": "pages/customer/login",

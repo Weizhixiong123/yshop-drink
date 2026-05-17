@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 import {
   fetchMemberList,
   operateMember,
+  updateMemberLevel,
   updateMemberInfo,
   updateMemberRemark
 } from '../api/member.js'
@@ -25,6 +26,13 @@ function normalizeGender(gender) {
 }
 
 function normalizeMemberItem(item) {
+  const levelMap = {
+    normal: '普通会员',
+    gold: '黄金会员',
+    platinum: '白金会员',
+    black_gold: '黑金会员',
+    black_diamond: '黑钻会员'
+  }
   return {
     id: item.id,
     name: item.name || '--',
@@ -34,6 +42,11 @@ function normalizeMemberItem(item) {
     liquor: item.liquor ?? item.wine ?? item.storedWine ?? '--',
     points: item.points ?? item.point ?? item.integral ?? '--',
     balance: item.balance ?? item.money ?? item.amount ?? '--',
+    principalBalance: item.principalBalance ?? '0.00',
+    bonusBalance: item.bonusBalance ?? '0.00',
+    level: levelMap[item.level] || '普通会员',
+    rawLevel: item.level || 'normal',
+    levelManual: Number(item.levelManual || 0) === 1,
     remark: item.remark || item.note || item.memo || '--'
   }
 }
@@ -142,6 +155,22 @@ export const memberStore = reactive({
       return result?.data
     } catch (error) {
       throw new Error(resolveApiMessage(error, '会员资产操作失败'))
+    }
+  },
+
+  async updateLevel(payload) {
+    try {
+      const response = await updateMemberLevel(payload)
+      const result = response.data
+
+      if (result?.code !== undefined && Number(result.code) !== 200) {
+        throw new Error(result?.msg || '调整会员等级失败')
+      }
+
+      await this.loadMembers(this.lastQuery)
+      return true
+    } catch (error) {
+      throw new Error(resolveApiMessage(error, '调整会员等级失败'))
     }
   }
 })

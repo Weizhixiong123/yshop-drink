@@ -18,6 +18,7 @@ const filters = ref({
 const infoForm = ref({ name: '', gender: '', phone: '' })
 const remarkForm = ref({ remark: '' })
 const operateForm = ref({ type: 'ADD_POINTS', value: '' })
+const levelForm = ref({ level: 'normal' })
 
 const phonePattern = /^1[3-9]\d{9}$/
 const operationTypes = [
@@ -25,8 +26,15 @@ const operationTypes = [
   { value: 'SUB_POINTS', label: '减积分' },
   { value: 'ADD_WINE', label: '加酒' },
   { value: 'SUB_WINE', label: '减酒' },
-  { value: 'ADD_BALANCE', label: '加储值' },
   { value: 'SUB_BALANCE', label: '减储值' }
+]
+
+const levelTypes = [
+  { value: 'normal', label: '普通会员' },
+  { value: 'gold', label: '黄金会员' },
+  { value: 'platinum', label: '白金会员' },
+  { value: 'black_gold', label: '黑金会员' },
+  { value: 'black_diamond', label: '黑钻会员' }
 ]
 
 const totalPages = computed(() => {
@@ -82,6 +90,13 @@ const openOperateModal = (member) => {
   operateForm.value = { type: 'ADD_POINTS', value: '' }
   formError.value = ''
   modalType.value = 'operate'
+}
+
+const openLevelModal = (member) => {
+  selectedMember.value = member
+  levelForm.value = { level: member.rawLevel || 'normal' }
+  formError.value = ''
+  modalType.value = 'level'
 }
 
 const loadMembers = async (pageNum = 1) => {
@@ -201,6 +216,24 @@ const submitOperate = async () => {
   }
 }
 
+const submitLevel = async () => {
+  submitting.value = true
+  formError.value = ''
+  successMsg.value = ''
+  try {
+    await memberStore.updateLevel({
+      memberId: selectedMember.value?.id,
+      level: levelForm.value.level
+    })
+    successMsg.value = '会员等级调整成功'
+    closeModal()
+  } catch (error) {
+    formError.value = error?.message || '调整会员等级失败'
+  } finally {
+    submitting.value = false
+  }
+}
+
 onMounted(() => {
   loadMembers()
 })
@@ -244,16 +277,18 @@ onMounted(() => {
               <th>存酒</th>
               <th>积分</th>
               <th>余额</th>
+              <th>本金/赠送</th>
+              <th>等级</th>
               <th>后台备注</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="9" class="empty-row">加载中...</td>
+              <td colspan="11" class="empty-row">加载中...</td>
             </tr>
             <tr v-else-if="!memberStore.list.length">
-              <td colspan="9" class="empty-row">暂无会员数据</td>
+              <td colspan="11" class="empty-row">暂无会员数据</td>
             </tr>
             <template v-else>
               <tr v-for="m in memberStore.list" :key="m.id">
@@ -264,10 +299,13 @@ onMounted(() => {
                 <td data-label="存酒"><span class="value-badge">{{ m.liquor }}</span></td>
                 <td data-label="积分"><span class="value-badge">{{ m.points }}</span></td>
                 <td data-label="余额"><span class="value-badge">{{ m.balance }}</span></td>
+                <td data-label="本金/赠送"><span class="value-badge">{{ m.principalBalance }} / {{ m.bonusBalance }}</span></td>
+                <td data-label="等级"><span class="value-badge">{{ m.level }}</span></td>
                 <td data-label="后台备注" class="remark-cell">{{ m.remark }}</td>
                 <td data-label="操作">
                   <div class="table-actions">
                     <button type="button" class="table-action" @click="openInfoModal(m)">资料</button>
+                    <button type="button" class="table-action" @click="openLevelModal(m)">等级</button>
                     <button type="button" class="table-action" @click="openRemarkModal(m)">备注</button>
                     <button type="button" class="table-action danger" @click="openOperateModal(m)">资产</button>
                   </div>
@@ -295,7 +333,7 @@ onMounted(() => {
     <div v-if="modalType" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content card-panel">
         <h3 class="modal-title">
-          {{ modalType === 'info' ? '修改会员资料' : modalType === 'remark' ? '修改后台备注' : '会员资产调整' }}
+          {{ modalType === 'info' ? '修改会员资料' : modalType === 'remark' ? '修改后台备注' : modalType === 'level' ? '调整会员等级' : '会员资产调整' }}
         </h3>
 
         <form v-if="modalType === 'info'" class="modal-form" @submit.prevent="submitInfo">
@@ -334,6 +372,28 @@ onMounted(() => {
             <button type="button" class="btn-outline" @click="closeModal">取消</button>
             <button type="submit" class="btn-solid submit-btn" :disabled="submitting">
               {{ submitting ? '提交中...' : '保存备注' }}
+            </button>
+          </div>
+        </form>
+
+        <form v-else-if="modalType === 'level'" class="modal-form" @submit.prevent="submitLevel">
+          <div class="form-item">
+            <label>会员</label>
+            <input type="text" :value="selectedMember?.name" disabled />
+          </div>
+          <div class="form-item">
+            <label>会员等级</label>
+            <select v-model="levelForm.level">
+              <option v-for="item in levelTypes" :key="item.value" :value="item.value">
+                {{ item.label }}
+              </option>
+            </select>
+          </div>
+          <div v-if="formError" class="form-error">{{ formError }}</div>
+          <div class="form-actions">
+            <button type="button" class="btn-outline" @click="closeModal">取消</button>
+            <button type="submit" class="btn-solid submit-btn" :disabled="submitting">
+              {{ submitting ? '提交中...' : '确认调整' }}
             </button>
           </div>
         </form>

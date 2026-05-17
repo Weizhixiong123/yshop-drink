@@ -1,9 +1,13 @@
 package com.clubhub.owner.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.clubhub.entity.BusinessRecord;
 import com.clubhub.dto.Result;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
 import com.clubhub.enums.OperationType;
+import com.clubhub.mapper.BusinessRecordMapper;
+import com.clubhub.owner.request.MemberLevelUpdateRequest;
 import com.clubhub.owner.request.MemberQueryRequest;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
@@ -25,6 +29,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -34,6 +40,7 @@ public class OwnerController {
 
     private final OwnerService ownerService;
     private final StaffService staffService;
+    private final BusinessRecordMapper businessRecordMapper;
 
     // ========== 员工管理 ==========
 
@@ -62,7 +69,7 @@ public class OwnerController {
     @GetMapping("/log/list")
     public Result<?> logList(OperationLogQueryRequest query) {
         if (query.getPageNum() == null) query.setPageNum(1L);
-        if (query.getPageSize() == null) query.setPageSize(20L);
+        if (query.getPageSize() == null) query.setPageSize(10L);
         return ownerService.listLogs(query);
     }
 
@@ -71,6 +78,16 @@ public class OwnerController {
     @GetMapping("/stat/today")
     public Result<?> todayStat() {
         return ownerService.todayStat();
+    }
+
+    @GetMapping("/account/stat")
+    public Result<?> accountStat(@RequestParam(required = false) String date) {
+        return ownerService.accountStat(date);
+    }
+
+    @PutMapping("/member/level")
+    public Result<?> updateMemberLevel(@RequestBody @Valid MemberLevelUpdateRequest request) {
+        return ownerService.updateMemberLevel(request);
     }
 
     // ========== 客户资料下载 ==========
@@ -106,7 +123,7 @@ public class OwnerController {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("客户资料");
 
-        String[] headers = {"姓名", "性别", "手机号", "存酒", "积分", "储值余额", "备注"};
+        String[] headers = {"姓名", "性别", "手机号", "存酒", "积分", "储值余额", "本金余额", "赠送余额", "会员等级", "备注"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             headerRow.createCell(i).setCellValue(headers[i]);
@@ -120,8 +137,11 @@ public class OwnerController {
             row.createCell(2).setCellValue(m.getPhone());
             row.createCell(3).setCellValue(m.getWine());
             row.createCell(4).setCellValue(m.getPoints());
-            row.createCell(5).setCellValue(m.getBalance().doubleValue());
-            row.createCell(6).setCellValue(m.getRemark() != null ? m.getRemark() : "");
+            row.createCell(5).setCellValue(m.getBalance() == null ? 0 : m.getBalance().doubleValue());
+            row.createCell(6).setCellValue(m.getPrincipalBalance() == null ? 0 : m.getPrincipalBalance().doubleValue());
+            row.createCell(7).setCellValue(m.getBonusBalance() == null ? 0 : m.getBonusBalance().doubleValue());
+            row.createCell(8).setCellValue(m.getLevel() == null ? "normal" : m.getLevel());
+            row.createCell(9).setCellValue(m.getRemark() != null ? m.getRemark() : "");
         }
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -162,6 +182,49 @@ public class OwnerController {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
                 "attachment;filename=" + URLEncoder.encode("操作日志.xlsx", StandardCharsets.UTF_8));
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    @GetMapping("/account/export")
+    public void exportAccount(@RequestParam(required = false) String date,
+                              HttpServletResponse response) throws IOException {
+        LocalDate statDate = (date == null || date.isBlank()) ? LocalDate.now() : LocalDate.parse(date);
+        LocalDateTime start = statDate.atStartOfDay();
+        LocalDateTime end = statDate.plusDays(1).atStartOfDay();
+        List<BusinessRecord> records = businessRecordMapper.selectList(
+                new LambdaQueryWrapper<BusinessRecord>()
+                        .ge(BusinessRecord::getCreateTime, start)
+                        .lt(BusinessRecord::getCreateTime, end)
+                        .orderByDesc(BusinessRecord::getCreateTime));
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("门店对账");
+        String[] headers = {"时间", "类型", "操作人", "会员", "营收/扣款", "本金", "赠送", "积分", "酒水", "码量(千)", "套餐/档位", "备注"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+        for (int i = 0; i < records.size(); i++) {
+            BusinessRecord r = records.get(i);
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(r.getCreateTime() == null ? "" : r.getCreateTime().format(fmt));
+            row.createCell(1).setCellValue(r.getRecordType());
+            row.createCell(2).setCellValue(r.getStaffName());
+            row.createCell(3).setCellValue(r.getMemberName() == null ? "" : r.getMemberName());
+            row.createCell(4).setCellValue(r.getAmount() == null ? 0 : r.getAmount().doubleValue());
+            row.createCell(5).setCellValue(r.getPrincipalAmount() == null ? 0 : r.getPrincipalAmount().doubleValue());
+            row.createCell(6).setCellValue(r.getBonusAmount() == null ? 0 : r.getBonusAmount().doubleValue());
+            row.createCell(7).setCellValue(r.getPointsAmount() == null ? 0 : r.getPointsAmount());
+            row.createCell(8).setCellValue(r.getWineQuantity() == null ? 0 : r.getWineQuantity());
+            row.createCell(9).setCellValue(r.getChipAmount() == null ? 0 : r.getChipAmount());
+            row.createCell(10).setCellValue(r.getPackageCode() == null ? "" : r.getPackageCode());
+            row.createCell(11).setCellValue(r.getRemark() == null ? "" : r.getRemark());
+        }
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition",
+                "attachment;filename=" + URLEncoder.encode("门店对账-" + statDate + ".xlsx", StandardCharsets.UTF_8));
         workbook.write(response.getOutputStream());
         workbook.close();
     }

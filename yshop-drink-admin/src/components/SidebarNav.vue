@@ -45,6 +45,15 @@ const handleLogout = () => {
         </div>
       </li>
       <li
+        :class="{ active: route.name === 'Account' }"
+        @click="router.push('/dashboard/account')"
+      >
+        <span class="icon">账</span>
+        <div class="text">
+          <span class="title">门店对账</span>
+        </div>
+      </li>
+      <li
         :class="{ active: route.name === 'Staff' }"
         @click="router.push('/dashboard/staff')"
       >

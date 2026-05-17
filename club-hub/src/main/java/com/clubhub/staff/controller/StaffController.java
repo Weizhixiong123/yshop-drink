@@ -3,8 +3,13 @@ package com.clubhub.staff.controller;
 import com.clubhub.dto.Result;
 import com.clubhub.staff.request.MemberInfoUpdateRequest;
 import com.clubhub.staff.request.MemberOperateRequest;
+import com.clubhub.staff.request.MemberPackageConsumeRequest;
+import com.clubhub.staff.request.MemberRechargeRequest;
 import com.clubhub.staff.request.MemberRegisterRequest;
 import com.clubhub.staff.request.MemberRemarkUpdateRequest;
+import com.clubhub.staff.request.GroupBuyWineRequest;
+import com.clubhub.staff.request.GiftChipsRequest;
+import com.clubhub.staff.request.PointsExchangeRequest;
 import com.clubhub.staff.service.StaffService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -56,6 +61,45 @@ public class StaffController {
         String staffId = (String) httpRequest.getAttribute("userId");
         String role = (String) httpRequest.getAttribute("role");
         return staffService.operate(request, staffId, role);
+    }
+
+    @PostMapping("/member/recharge")
+    public Result<?> recharge(@RequestBody @Valid MemberRechargeRequest request,
+                              HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.recharge(request, staffId, role);
+    }
+
+    @PostMapping("/member/package-consume")
+    public Result<?> consumePackage(@RequestBody @Valid MemberPackageConsumeRequest request,
+                                    HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.consumePackage(request, staffId, role);
+    }
+
+    @PostMapping("/member/group-buy-wine")
+    public Result<?> groupBuyWine(@RequestBody @Valid GroupBuyWineRequest request,
+                                  HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        return staffService.groupBuyWine(request, staffId);
+    }
+
+    @PostMapping("/member/points-exchange")
+    public Result<?> exchangePoints(@RequestBody @Valid PointsExchangeRequest request,
+                                    HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.exchangePoints(request, staffId, role);
+    }
+
+    @PostMapping("/gift-chips")
+    public Result<?> giftChips(@RequestBody @Valid GiftChipsRequest request,
+                               HttpServletRequest httpRequest) {
+        String staffId = (String) httpRequest.getAttribute("userId");
+        String role = (String) httpRequest.getAttribute("role");
+        return staffService.giftChips(request, staffId, role);
     }
 
     /**

@@ -3,12 +3,15 @@ package com.clubhub.owner.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clubhub.dto.Result;
+import com.clubhub.entity.BusinessRecord;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
 import com.clubhub.entity.Staff;
+import com.clubhub.mapper.BusinessRecordMapper;
 import com.clubhub.mapper.MemberMapper;
 import com.clubhub.mapper.OperationLogMapper;
 import com.clubhub.mapper.StaffMapper;
+import com.clubhub.owner.request.MemberLevelUpdateRequest;
 import com.clubhub.owner.request.MemberQueryRequest;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
@@ -28,14 +31,18 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OwnerServiceImpl implements OwnerService {
+    private static final long DEFAULT_LOG_PAGE_SIZE = 10L;
 
     private final StaffMapper staffMapper;
     private final MemberMapper memberMapper;
     private final OperationLogMapper operationLogMapper;
+    private final BusinessRecordMapper businessRecordMapper;
 
     // ========== 员工管理 ==========
 
@@ -108,7 +115,7 @@ public class OwnerServiceImpl implements OwnerService {
     public Result<?> listLogs(OperationLogQueryRequest query) {
         LambdaQueryWrapper<OperationLog> wrapper = buildLogQuery(query);
         Long pageNum = query.getPageNum() == null ? 1L : query.getPageNum();
-        Long pageSize = query.getPageSize() == null ? 20L : query.getPageSize();
+        Long pageSize = normalizeLogPageSize(query.getPageSize());
         Page<OperationLog> page = operationLogMapper.selectPage(Page.of(pageNum, pageSize), wrapper);
 
         OperationLogPageResponse resp = new OperationLogPageResponse();
@@ -142,6 +149,13 @@ public class OwnerServiceImpl implements OwnerService {
         return wrapper;
     }
 
+    private Long normalizeLogPageSize(Long pageSize) {
+        if (pageSize == null || pageSize < 1L) {
+            return DEFAULT_LOG_PAGE_SIZE;
+        }
+        return Math.min(pageSize, DEFAULT_LOG_PAGE_SIZE);
+    }
+
     // ========== 统计 ==========
 
     @Override
@@ -164,6 +178,79 @@ public class OwnerServiceImpl implements OwnerService {
 
         String statDate = start.toLocalDate() + " 12:00 ~ " + end.toLocalDate() + " 12:00";
         return Result.ok(new TodayStatResponse(statDate, totalAddPoints, totalSpecifiedSubPoints, chipValue));
+    }
+
+    @Override
+    public Result<?> accountStat(String date) {
+        LocalDate statDate = (date == null || date.isBlank()) ? LocalDate.now() : LocalDate.parse(date);
+        LocalDateTime start = statDate.atStartOfDay();
+        LocalDateTime end = statDate.plusDays(1).atStartOfDay();
+        List<BusinessRecord> records = businessRecordMapper.selectList(
+                new LambdaQueryWrapper<BusinessRecord>()
+                        .ge(BusinessRecord::getCreateTime, start)
+                        .lt(BusinessRecord::getCreateTime, end)
+                        .orderByDesc(BusinessRecord::getCreateTime));
+
+        BigDecimal rechargeRevenue = sumAmount(records, "member_recharge", BusinessRecord::getPrincipalAmount);
+        BigDecimal groupBuyRevenue = sumAmount(records, "group_buy_wine", BusinessRecord::getAmount);
+        BigDecimal totalRevenue = rechargeRevenue.add(groupBuyRevenue);
+
+        int packageChips = sumInt(records, "package_consume", BusinessRecord::getChipAmount);
+        int pointsChips = sumInt(records, "points_exchange_chips", BusinessRecord::getChipAmount);
+        int groupBuyChips = sumInt(records, "group_buy_wine", BusinessRecord::getChipAmount);
+        int giftChips = sumInt(records, "gift_chips", BusinessRecord::getChipAmount);
+
+        int fixedPoints = sumInt(records, "points_exchange_chips", BusinessRecord::getPointsAmount);
+        int freePoints = operationLogMapper.selectList(
+                        new LambdaQueryWrapper<OperationLog>()
+                                .eq(OperationLog::getOperationType, "sub_points")
+                                .ge(OperationLog::getCreateTime, start)
+                                .lt(OperationLog::getCreateTime, end))
+                .stream()
+                .map(log -> log.getOperationValue() == null ? BigDecimal.ZERO : log.getOperationValue())
+                .mapToInt(BigDecimal::intValue)
+                .sum();
+
+        Map<String, List<BusinessRecord>> details = records.stream()
+                .collect(Collectors.groupingBy(BusinessRecord::getRecordType));
+
+        return Result.ok(Map.of(
+                "date", statDate.toString(),
+                "revenue", Map.of(
+                        "recharge", rechargeRevenue,
+                        "groupBuy", groupBuyRevenue,
+                        "total", totalRevenue
+                ),
+                "chips", Map.of(
+                        "packageCash", packageChips,
+                        "pointsExchange", pointsChips,
+                        "groupBuy", groupBuyChips,
+                        "gift", giftChips,
+                        "total", packageChips + pointsChips + groupBuyChips + giftChips
+                ),
+                "points", Map.of(
+                        "fixed", fixedPoints,
+                        "free", freePoints,
+                        "total", fixedPoints + freePoints
+                ),
+                "records", records,
+                "details", details
+        ));
+    }
+
+    @Override
+    public Result<?> updateMemberLevel(MemberLevelUpdateRequest request) {
+        Member member = memberMapper.selectById(request.getMemberId());
+        if (member == null) {
+            return Result.fail("客户不存在");
+        }
+        String level = normalizeMemberLevel(request.getLevel());
+        Member update = new Member();
+        update.setId(request.getMemberId());
+        update.setLevel(level);
+        update.setLevelManual(1);
+        memberMapper.updateById(update);
+        return Result.ok();
     }
 
     // ========== 客户资料 ==========
@@ -214,6 +301,33 @@ public class OwnerServiceImpl implements OwnerService {
             return 20L;
         }
         return Math.min(Math.max(pageSize, 1L), 100L);
+    }
+
+    private BigDecimal sumAmount(List<BusinessRecord> records, String type,
+                                 java.util.function.Function<BusinessRecord, BigDecimal> getter) {
+        return records.stream()
+                .filter(record -> type.equals(record.getRecordType()))
+                .map(getter)
+                .filter(value -> value != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private int sumInt(List<BusinessRecord> records, String type,
+                       java.util.function.Function<BusinessRecord, Integer> getter) {
+        return records.stream()
+                .filter(record -> type.equals(record.getRecordType()))
+                .map(getter)
+                .filter(value -> value != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+    }
+
+    private String normalizeMemberLevel(String level) {
+        if ("gold".equals(level) || "platinum".equals(level) || "black_gold".equals(level)
+                || "black_diamond".equals(level)) {
+            return level;
+        }
+        return "normal";
     }
 
     private String normalizeStaffRole(String role) {

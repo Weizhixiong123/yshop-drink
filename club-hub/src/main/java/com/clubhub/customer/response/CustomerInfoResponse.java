@@ -11,5 +11,8 @@ public class CustomerInfoResponse {
     private Integer wine;
     private Integer points;
     private BigDecimal balance;
+    private BigDecimal principalBalance;
+    private BigDecimal bonusBalance;
+    private String level;
     private String remark;
 }

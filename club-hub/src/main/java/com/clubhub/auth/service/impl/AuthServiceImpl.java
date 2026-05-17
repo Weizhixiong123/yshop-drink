@@ -156,9 +156,56 @@ public class AuthServiceImpl implements AuthService {
             return accessTokenResult;
         }
 
+        Result<Map<String, Object>> phoneResponseResult = requestWechatPhone(code, accessTokenResult.getData());
+        if (phoneResponseResult.getCode() != 200) {
+            return Result.fail(phoneResponseResult.getMsg());
+        }
+        Map<String, Object> response = phoneResponseResult.getData();
+        if (response == null) {
+            return Result.fail("微信手机号接口无响应");
+        }
+
+        int errcode = asInt(response.get("errcode"), 0);
+        if (isInvalidAccessToken(errcode)) {
+            clearWechatAccessTokenCache();
+            accessTokenResult = getWechatAccessToken();
+            if (accessTokenResult.getCode() != 200) {
+                return accessTokenResult;
+            }
+            phoneResponseResult = requestWechatPhone(code, accessTokenResult.getData());
+            if (phoneResponseResult.getCode() != 200) {
+                return Result.fail(phoneResponseResult.getMsg());
+            }
+            response = phoneResponseResult.getData();
+            if (response == null) {
+                return Result.fail("微信手机号接口无响应");
+            }
+            errcode = asInt(response.get("errcode"), 0);
+        }
+
+        if (errcode != 0) {
+            return Result.fail("微信手机号授权失败：" + getWechatErrorMessage(response));
+        }
+
+        Object phoneInfoObj = response.get("phone_info");
+        if (!(phoneInfoObj instanceof Map<?, ?> phoneInfo)) {
+            return Result.fail("微信未返回手机号信息");
+        }
+
+        String phone = trimToNull(Objects.toString(phoneInfo.get("purePhoneNumber"), ""));
+        if (phone == null) {
+            phone = trimToNull(Objects.toString(phoneInfo.get("phoneNumber"), ""));
+        }
+        if (phone == null) {
+            return Result.fail("微信未返回手机号");
+        }
+        return Result.ok(phone);
+    }
+
+    private Result<Map<String, Object>> requestWechatPhone(String code, String accessToken) {
         String url = UriComponentsBuilder
                 .fromHttpUrl("https://api.weixin.qq.com/wxa/business/getuserphonenumber")
-                .queryParam("access_token", accessTokenResult.getData())
+                .queryParam("access_token", accessToken)
                 .toUriString();
 
         try {
@@ -169,28 +216,7 @@ public class AuthServiceImpl implements AuthService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.postForObject(url, new HttpEntity<>(body, headers), Map.class);
-            if (response == null) {
-                return Result.fail("微信手机号接口无响应");
-            }
-
-            int errcode = asInt(response.get("errcode"), 0);
-            if (errcode != 0) {
-                return Result.fail("微信手机号授权失败：" + getWechatErrorMessage(response));
-            }
-
-            Object phoneInfoObj = response.get("phone_info");
-            if (!(phoneInfoObj instanceof Map<?, ?> phoneInfo)) {
-                return Result.fail("微信未返回手机号信息");
-            }
-
-            String phone = trimToNull(Objects.toString(phoneInfo.get("purePhoneNumber"), ""));
-            if (phone == null) {
-                phone = trimToNull(Objects.toString(phoneInfo.get("phoneNumber"), ""));
-            }
-            if (phone == null) {
-                return Result.fail("微信未返回手机号");
-            }
-            return Result.ok(phone);
+            return Result.ok(response);
         } catch (JsonProcessingException e) {
             return Result.fail("微信手机号请求参数构造失败");
         } catch (RestClientException e) {
@@ -204,16 +230,21 @@ public class AuthServiceImpl implements AuthService {
             return Result.ok(cachedWechatAccessToken);
         }
 
-        String url = UriComponentsBuilder
-                .fromHttpUrl("https://api.weixin.qq.com/cgi-bin/token")
-                .queryParam("grant_type", "client_credential")
-                .queryParam("appid", wechatMiniAppId)
-                .queryParam("secret", wechatMiniAppSecret)
-                .toUriString();
+        String url = "https://api.weixin.qq.com/cgi-bin/stable_token";
 
         try {
+            String body = objectMapper.writeValueAsString(Map.of(
+                    "grant_type", "client_credential",
+                    "appid", wechatMiniAppId,
+                    "secret", wechatMiniAppSecret,
+                    "force_refresh", false
+            ));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentLength(body.getBytes(StandardCharsets.UTF_8).length);
+
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, new HttpEntity<>(body, headers), Map.class);
             if (response == null) {
                 return Result.fail("微信 access_token 接口无响应");
             }
@@ -232,9 +263,20 @@ public class AuthServiceImpl implements AuthService {
             cachedWechatAccessToken = accessToken;
             cachedWechatAccessTokenExpireAt = now + Math.max(60, expiresIn - 300) * 1000L;
             return Result.ok(accessToken);
+        } catch (JsonProcessingException e) {
+            return Result.fail("微信 access_token 请求参数构造失败");
         } catch (RestClientException e) {
             return Result.fail("调用微信 access_token 接口失败：" + e.getMessage());
         }
+    }
+
+    private synchronized void clearWechatAccessTokenCache() {
+        cachedWechatAccessToken = null;
+        cachedWechatAccessTokenExpireAt = 0;
+    }
+
+    private boolean isInvalidAccessToken(int errcode) {
+        return errcode == 40001 || errcode == 40014 || errcode == 42001;
     }
 
     private String getWechatErrorMessage(Map<String, Object> response) {

@@ -51,6 +51,26 @@ export function memberOperate(data) {
   return api.post('/api/staff/member/operate', data)
 }
 
+export function memberRecharge(data) {
+  return api.post('/api/staff/member/recharge', data)
+}
+
+export function memberPackageConsume(data) {
+  return api.post('/api/staff/member/package-consume', data)
+}
+
+export function memberGroupBuyWine(data) {
+  return api.post('/api/staff/member/group-buy-wine', data)
+}
+
+export function memberPointsExchange(data) {
+  return api.post('/api/staff/member/points-exchange', data)
+}
+
+export function giftChips(data) {
+  return api.post('/api/staff/gift-chips', data)
+}
+
 /**
  * 修改备注 (PUT /api/staff/member/remark)
  * @param {Object} data - MemberRemarkUpdateRequest

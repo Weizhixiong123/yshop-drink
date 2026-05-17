@@ -10,5 +10,5 @@ public class OperationLogQueryRequest {
     private String startTime;
     private String endTime;
     private Long pageNum = 1L;
-    private Long pageSize = 20L;
+    private Long pageSize = 10L;
 }

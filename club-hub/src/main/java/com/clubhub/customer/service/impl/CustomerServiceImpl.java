@@ -28,6 +28,9 @@ public class CustomerServiceImpl implements CustomerService {
         resp.setWine(member.getWine());
         resp.setPoints(member.getPoints());
         resp.setBalance(member.getBalance());
+        resp.setPrincipalBalance(member.getPrincipalBalance());
+        resp.setBonusBalance(member.getBonusBalance());
+        resp.setLevel(member.getLevel());
         resp.setRemark(member.getRemark());
         return Result.ok(resp);
     }

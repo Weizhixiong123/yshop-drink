@@ -4,6 +4,7 @@ import com.clubhub.dto.Result;
 import com.clubhub.entity.Member;
 import com.clubhub.entity.OperationLog;
 import com.clubhub.owner.request.MemberQueryRequest;
+import com.clubhub.owner.request.MemberLevelUpdateRequest;
 import com.clubhub.owner.request.OperationLogQueryRequest;
 import com.clubhub.owner.request.StaffAddRequest;
 import com.clubhub.owner.request.StaffUpdateRequest;
@@ -31,6 +32,10 @@ public interface OwnerService {
     // ========== 统计 ==========
 
     Result<?> todayStat();
+
+    Result<?> accountStat(String date);
+
+    Result<?> updateMemberLevel(MemberLevelUpdateRequest request);
 
     // ========== 客户资料 ==========
 

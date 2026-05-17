@@ -30,6 +30,11 @@ const routes = [
         component: () => import('../components/LogTable.vue')
       },
       {
+        path: 'account',
+        name: 'Account',
+        component: () => import('../components/AccountTable.vue')
+      },
+      {
         path: 'staff',
         name: 'Staff',
         component: () => import('../components/StaffTable.vue')
